@@ -57,9 +57,6 @@
       .controls input, .controls select { margin: 0; }
       .controls input { flex: 1; min-width: 220px; }
       .controls select { width: auto; }
-      .controls select#yearFilter { min-width: 200px; }
-      .controls select#sortFilter { min-width: 255px; }
-      .controls select#sortDirection { min-width: 145px; }
       .add { width: auto; white-space: nowrap; }
       .card { overflow: hidden; margin-bottom: 10px; }
       .head { padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
@@ -98,11 +95,21 @@
       .cancel { background: #fff; color: var(--ink); border-color: var(--line); }
       .notice { padding: 11px; background: var(--amberbg); color: var(--amber); border-radius: 8px; font-size: 12px; margin-bottom: 14px; }
       .forgot { display: block; width: 100%; margin-top: 10px; border: 0; background: transparent; color: var(--deep); font-size: 13px; text-decoration: underline; cursor: pointer; }
-      .grad-analytics { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 12px; margin-bottom: 18px; }
-      .grad-stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 15px; }
+      .grad-analytics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .grad-stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 15px;
+      }
       .grad-stat .num { font-size: 25px; }
       .grad-stat .lbl { margin-top: 2px; }
-      @media (max-width: 650px) { .stats { grid-template-columns: 1fr; } .formgrid { grid-template-columns: 1fr; } .full { grid-column: auto; } .topbar { padding: 12px 16px; } .main { padding: 18px 12px; } .meta { display: none; } .controls select { width: 100%; } }
+      @media (max-width: 650px) { .stats { grid-template-columns: 1fr; } .formgrid { grid-template-columns: 1fr; } .full { grid-column: auto; } .topbar { padding: 12px 16px; } .main { padding: 18px 12px; } .meta { display: none; } }
     </style>
   </head>
   <body>
@@ -138,19 +145,7 @@
           </div>
           <div id="graduationStats" class="grad-analytics"></div>
           <div class="controls">
-            <input id="search" placeholder="Search Student ID, name, email, or contact..." oninput="renderStudents()" />
-            <select id="yearFilter" onchange="renderStudents()"><option value="">All years graduated</option></select>
-            <select id="sortFilter" onchange="renderStudents()">
-              <option value="year">Sort: Year graduated</option>
-              <option value="name">Sort: Name</option>
-              <option value="student_number">Sort: Student number</option>
-              <option value="documents">Sort: Documents complete</option>
-            </select>
-            <select id="sortDirection" onchange="renderStudents()">
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-            <button class="btn add" onclick="openStudentModal()">+ Add student</button>
+            <input id="search" placeholder="Search Student ID or name..." oninput="renderStudents()" /><select id="yearFilter" onchange="renderStudents()"><option value="">All graduation years</option></select><button class="btn add" onclick="openStudentModal()">+ Add student</button>
           </div>
           <div id="studentList"></div>
         </div>
@@ -183,157 +178,120 @@
           <div class="modal-actions"><button class="btn cancel" onclick="closeForgotPassword()">Cancel</button><button class="btn" onclick="sendAdminOtp()">Send OTP</button></div>
         </div>
         <div id="forgotStep2" class="hidden">
-          <label>Verification OTP</label><input id="forgotOtp" inputmode="numeric" maxlength="8" autocomplete="one-time-code" placeholder="8-digit code" />
-          <label>New password</label><input id="forgotNewPassword" type="password" autocomplete="new-password" placeholder="Minimum 8 characters" />
-          <label>Confirm new password</label><input id="forgotConfirmPassword" type="password" autocomplete="new-password" placeholder="Re-enter password" />
-          <div class="modal-actions"><button class="btn cancel" onclick="closeForgotPassword()">Cancel</button><button class="btn" onclick="verifyAdminOtpAndReset()">Verify & Reset</button></div>
+          <label>Verification OTP</label><input id="forgotOtp" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="8-digit code" />
+          <div class="modal-actions"><button class="btn cancel" onclick="closeForgotPassword()">Cancel</button><button class="btn" onclick="verifyAdminOtp()">Verify OTP</button></div>
+        </div>
+        <div id="forgotStep3" class="hidden">
+          <label>New password <span style="font-weight: 400; color: #8b8578">(minimum 8 characters)</span></label><input id="forgotNewPassword" type="password" autocomplete="new-password" />
+          <label>Confirmation Password</label><input id="forgotNewPasswordConfirm" type="password" autocomplete="new-password" />
+          <div class="modal-actions"><button class="btn cancel" onclick="closeForgotPassword()">Cancel</button><button class="btn" onclick="changeAdminPassword()">Change password</button></div>
         </div>
       </div>
     </div>
     <script>
       const SUPABASE_URL = "https://kivbqllahiisffihnrgh.supabase.co";
-      const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtpdmJxbGxhaGlpc2ZmaGhuanJoZyIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzU1MDE0MTYwLCJleHAiOjIwNzA1MDE0MTYwfQ.dummy-public-placeholder";
-      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
-      let loginMode = "admin";
-      let session = null;
-      let students = [];
-      let docs = [];
-      let docTypes = [];
-      let editingId = null;
-      let forgotEmail = "";
-      let adminEmails = [];
-
-      function esc(v) { return String(v ?? "").replace(/[&<>'"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;","\"":"&quot;"}[c])); }
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_62AnaZ2qZYE8_i8RYapiug_1mcF0_Nd";
+      const { createClient } = supabase;
+      const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const DOCS = ["Personal Record", "Academic Record", "Completion and Certification Records", "RLE / Clinical Records", "Others"];
+      let loginMode = "admin", currentUser = null, students = [], docTypes = [], docs = [], editingId = null, channel = null, forgotEmail = "";
+      function esc(v) { return String(v ?? "").replace(/[&<>\\"]/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\\"': "&quot;" })[m] || m); }
       function showLogin(mode) {
         loginMode = mode;
         document.getElementById("adminTab").classList.toggle("active", mode === "admin");
         document.getElementById("studentTab").classList.toggle("active", mode === "student");
-        document.getElementById("loginIdLabel").textContent = mode === "admin" ? "Admin email" : "Student ID";
-        document.getElementById("loginId").type = mode === "admin" ? "email" : "text";
-        document.getElementById("loginId").autocomplete = mode === "admin" ? "username" : "username";
+        const label = document.getElementById("loginIdLabel"), input = document.getElementById("loginId");
+        label.textContent = mode === "admin" ? "Admin email" : "Student ID";
+        input.type = mode === "admin" ? "email" : "text";
+        input.placeholder = mode === "admin" ? "admin@example.com" : "2024-001";
+        input.value = ""; document.getElementById("loginPassword").value = ""; document.getElementById("loginError").classList.add("hidden");
         document.getElementById("forgotLink").classList.toggle("hidden", mode !== "admin");
-        document.getElementById("loginError").classList.add("hidden");
       }
-      function setError(id, message) { const el = document.getElementById(id); el.textContent = message; el.classList.remove("hidden"); }
-      function clearError(id) { document.getElementById(id).classList.add("hidden"); }
-      async function signIn(e) {
-        e.preventDefault(); clearError("loginError");
-        const id = document.getElementById("loginId").value.trim();
-        const password = document.getElementById("loginPassword").value;
-        try {
-          let email = id;
-          if (loginMode === "student") {
-            const { data, error } = await sb.from("students").select("email").eq("student_number", id).maybeSingle();
-            if (error) throw error;
-            if (!data?.email) throw new Error("No email is registered for this student.");
-            email = data.email;
-          }
-          const { data, error } = await sb.auth.signInWithPassword({ email, password });
-          if (error) throw error;
-          session = data.session;
-          await enterApp();
-        } catch (err) { setError("loginError", err.message || "Unable to sign in."); }
+      function syntheticEmail(number) { return number.toLowerCase().replace(/[^a-z0-9._-]/g, "-") + "@students.nursync.internal"; }
+      function msg(text) { const e = document.getElementById("loginError"); e.textContent = text; e.classList.remove("hidden"); }
+      async function login(e) { e.preventDefault(); const id = document.getElementById("loginId").value.trim(), pass = document.getElementById("loginPassword").value; if (!id || !pass) return; const email = loginMode === "student" ? syntheticEmail(id) : id; const { data, error } = await sb.auth.signInWithPassword({ email, password: pass }); if (error) { msg(`Sign in failed: ${error.message}`); return; } currentUser = data.user; await routeUser(); }
+      document.getElementById("loginForm").addEventListener("submit", login);
+      function forgotMsg(text) { const e = document.getElementById("forgotError"); e.textContent = text; e.classList.remove("hidden"); }
+      function resetForgotSteps() { document.getElementById("forgotStep1").classList.remove("hidden"); document.getElementById("forgotStep2").classList.add("hidden"); document.getElementById("forgotStep3").classList.add("hidden"); document.getElementById("forgotError").classList.add("hidden"); document.getElementById("forgotOtp").value = ""; document.getElementById("forgotNewPassword").value = ""; document.getElementById("forgotNewPasswordConfirm").value = ""; document.getElementById("forgotDescription").textContent = "Enter your admin email. A one-time password will be sent to that email for verification."; }
+      function openForgotPassword() { if (loginMode !== "admin") showLogin("admin"); resetForgotSteps(); document.getElementById("forgotEmail").value = document.getElementById("loginId").value.trim(); document.getElementById("forgotModal").classList.add("open"); }
+      function closeForgotPassword() { document.getElementById("forgotModal").classList.remove("open"); if (currentUser) { sb.auth.signOut(); currentUser = null; } }
+      async function sendAdminOtp() {
+        const email = document.getElementById("forgotEmail").value.trim().toLowerCase();
+        if (!email) { forgotMsg("Enter the admin email address."); return; }
+        const { error } = await sb.auth.resetPasswordForEmail(email);
+        if (error) { forgotMsg(error.message); return; }
+        forgotEmail = email;
+        document.getElementById("forgotStep1").classList.add("hidden"); document.getElementById("forgotStep2").classList.remove("hidden");
+        document.getElementById("forgotDescription").textContent = "Enter the 8-digit OTP sent to your admin email.";
       }
-      document.getElementById("loginForm").addEventListener("submit", signIn);
-
-      async function enterApp() {
-        document.getElementById("login").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        const email = session?.user?.email || "";
-        const { data: studentLink } = await sb.from("student_accounts").select("student_id").eq("user_id", session.user.id).maybeSingle();
-        const isAdmin = !studentLink;
-        document.getElementById("roleLabel").textContent = isAdmin ? "Registrar / Admin" : "Student";
-        document.getElementById("adminView").classList.toggle("hidden", !isAdmin);
-        document.getElementById("studentView").classList.toggle("hidden", isAdmin);
-        if (isAdmin) await loadAdminData(); else await loadStudentProfile(studentLink.student_id);
+      async function verifyAdminOtp() {
+        const token = document.getElementById("forgotOtp").value.trim();
+        if (!/^\d{8}$/.test(token)) { forgotMsg("Enter the 8-digit OTP from your email."); return; }
+        const { data, error } = await sb.auth.verifyOtp({ email: forgotEmail, token, type: "recovery" });
+        if (error) { forgotMsg(`OTP verification failed: ${error.message}`); return; }
+        currentUser = data.user;
+        const { data: role, error: roleError } = await sb.from("user_roles").select("role").eq("user_id", currentUser.id).eq("role", "admin").maybeSingle();
+        if (roleError || !role) { await sb.auth.signOut(); currentUser = null; forgotMsg("This account is not authorized as an admin."); return; }
+        document.getElementById("forgotStep2").classList.add("hidden"); document.getElementById("forgotStep3").classList.remove("hidden"); document.getElementById("forgotDescription").textContent = "OTP verified. You may now set a new admin password.";
       }
-      async function loadAdminData() {
-        const [s, d, t] = await Promise.all([
-          sb.from("students").select("*").order("full_name"),
-          sb.from("student_documents").select("*"),
-          sb.from("document_types").select("*").order("name")
-        ]);
-        if (s.error) throw s.error; if (d.error) throw d.error; if (t.error) throw t.error;
-        students = s.data || []; docs = d.data || []; docTypes = t.data || [];
-        const years = [...new Set(students.map(s => s.year_graduated).filter(v => v !== null && v !== undefined && v !== ""))].sort((a,b) => Number(a)-Number(b));
-        const yf = document.getElementById("yearFilter");
-        yf.innerHTML = '<option value="">All years graduated</option>' + years.map(y => `<option value="${esc(y)}">${esc(y)}</option>`).join("");
-        renderStudents();
+      async function changeAdminPassword() {
+        const password = document.getElementById("forgotNewPassword").value, confirmPassword = document.getElementById("forgotNewPasswordConfirm").value;
+        if (password.length < 8) { forgotMsg("New password must be at least 8 characters."); return; }
+        if (password !== confirmPassword) { forgotMsg("Confirmation Password does not match the new password."); return; }
+        if (!currentUser) { forgotMsg("Verification session expired. Please request a new OTP."); return; }
+        const { error } = await sb.auth.updateUser({ password });
+        if (error) { forgotMsg(error.message); return; }
+        await sb.auth.signOut(); currentUser = null; document.getElementById("forgotModal").classList.remove("open"); document.getElementById("loginId").value = forgotEmail; document.getElementById("loginPassword").value = "";
+        msg("Password changed successfully. You can now sign in with your new password.");
       }
-      function completedDocuments(s) { return docs.filter(d => d.student_id === s.id && d.is_submitted).length; }
-      function compareStudentValues(a, b, field) {
-        if (field === "documents") return completedDocuments(a) - completedDocuments(b);
-        if (field === "year") {
-          const av = String(a.year_graduated ?? "").trim();
-          const bv = String(b.year_graduated ?? "").trim();
-          const an = Number(av); const bn = Number(bv);
-          if (av === "" && bv !== "") return 1;
-          if (av !== "" && bv === "") return -1;
-          if (Number.isFinite(an) && Number.isFinite(bn)) return an - bn;
-          if (Number.isFinite(an) && !Number.isFinite(bn)) return -1;
-          if (!Number.isFinite(an) && Number.isFinite(bn)) return 1;
-          return av.localeCompare(bv, undefined, { numeric: true, sensitivity: "base" });
-        }
-        if (field === "student_number") return String(a.student_number ?? "").localeCompare(String(b.student_number ?? ""), undefined, { numeric: true, sensitivity: "base" });
-        return String(a.full_name ?? "").localeCompare(String(b.full_name ?? ""), undefined, { sensitivity: "base" });
+      async function routeUser() {
+        const { data, error } = await sb.from("user_roles").select("role").eq("user_id", currentUser.id).maybeSingle();
+        if (error || !data) { await sb.auth.signOut(); msg("Your account is not assigned a NurSync role. Ask the registrar to configure it."); return; }
+        document.getElementById("login").classList.add("hidden"); document.getElementById("app").classList.remove("hidden"); document.getElementById("roleLabel").textContent = data.role === "admin" ? "Registrar" : "Student";
+        if (data.role === "admin") { document.getElementById("adminView").classList.remove("hidden"); document.getElementById("studentView").classList.add("hidden"); await loadAdmin(); } else { document.getElementById("studentView").classList.remove("hidden"); document.getElementById("adminView").classList.add("hidden"); await loadStudent(); }
+        subscribeRealtime();
       }
-      function renderStudents(openStudentId = null) {
-        renderGraduationStats();
-        const q = document.getElementById("search").value.trim().toLowerCase();
-        const y = document.getElementById("yearFilter").value;
-        const sort = document.getElementById("sortFilter")?.value || "year";
-        const direction = document.getElementById("sortDirection")?.value || "asc";
-        const list = students.filter(s => {
-          const searchable = [s.student_number, s.full_name, s.year_graduated, s.email, s.contact_number].filter(v => v !== null && v !== undefined).join(" ").toLowerCase();
-          return (!q || searchable.includes(q)) && (!y || String(s.year_graduated) === y);
-        }).sort((a,b) => {
-          const result = compareStudentValues(a,b,sort);
-          if (result !== 0) return direction === "desc" ? -result : result;
-          return String(a.full_name ?? "").localeCompare(String(b.full_name ?? ""), undefined, { sensitivity: "base" });
-        });
-        document.getElementById("studentList").innerHTML = list.length ? list.map(studentCard).join("") : '<div class="panel" style="padding:40px;text-align:center;color:#4b5670">No students found.</div>';
-        document.getElementById("studentCount").textContent = students.length;
-        document.getElementById("submittedCount").textContent = docs.filter(d => d.is_submitted).length;
-        document.getElementById("requiredCount").textContent = students.length * docTypes.filter(t => t.is_required).length;
-        if (openStudentId) document.getElementById("card-" + openStudentId)?.classList.add("open");
-      }
+      async function loadAdmin() { const a = await Promise.all([sb.from("students").select("*").order("student_number"), sb.from("document_types").select("*").order("name"), sb.from("student_documents").select("*")]); if (a[0].error) { alert(a[0].error.message); return; } students = a[0].data || []; docTypes = a[1].data || []; docs = a[2].data || []; fillYears(); renderStudents(); }
+      function fillYears() { const sel = document.getElementById("yearFilter"), old = sel.value, years = [...new Set(students.map((s) => s.year_graduated).filter(Boolean))].sort((a, b) => b - a); sel.innerHTML = '<option value="">All graduation years</option>' + years.map((y) => `<option value="${y}">${y}</option>`).join(""); sel.value = old; }
+      function docsFor(id) { return docs.filter((d) => d.student_id === id); }
+      function stamp(id) { const d = docsFor(id), required = docTypes.filter((t) => t.is_required), done = d.filter((x) => x.is_submitted), n = done.length, total = docTypes.length, reqDone = required.filter((t) => d.some((x) => x.document_type_id === t.id && x.is_submitted)).length; if (!total) return ["0 / 0", "empty"]; if (reqDone === required.length) return [`${n} / ${total}`, "complete"]; return [`${n} / ${total}`, "partial"]; }
       function renderGraduationStats() {
         const container = document.getElementById("graduationStats");
         if (!container) return;
         const counts = new Map();
-        students.forEach(student => {
+        students.forEach((student) => {
           if (student.year_graduated !== null && student.year_graduated !== undefined && student.year_graduated !== "") {
             const year = String(student.year_graduated);
             counts.set(year, (counts.get(year) || 0) + 1);
           }
         });
-        const years = [...counts.keys()].sort((a,b) => Number(a)-Number(b));
-        container.innerHTML = years.length ? years.map(year => `<div class="grad-stat"><div class="num">${counts.get(year)}</div><div class="lbl">Graduates of ${esc(year)}</div></div>`).join("") : '<div class="panel" style="padding:15px;color:#4b5670">No graduation-year data available.</div>';
+        const years = [...counts.keys()].sort((a, b) => Number(a) - Number(b));
+        container.innerHTML = years.length
+          ? years.map((year) => `<div class="grad-stat"><div class="num">${counts.get(year)}</div><div class="lbl">Graduates of ${esc(year)}</div></div>`).join("")
+          : '<div class="panel" style="padding:15px;color:#4b5670">No graduation-year data available.</div>';
       }
-      function studentCard(s) {
-        const [label, cls] = stamp(s.id);
-        return `<div class="card" id="card-${s.id}"><div class="head" onclick="toggleCard('${s.id}')"><span class="id">${esc(s.student_number)}</span><span class="name">${esc(s.full_name)}</span><span class="meta">${esc(s.year_graduated || "")}</span><span class="stamp ${cls}">${label}</span><span>›</span></div><div class="body">${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map(t => docRow(s,t,true)).join("")}</div><div class="actions"><button class="small" onclick="stopCardToggle(event);editStudent('${s.id}')">Edit</button><button class="small danger" onclick="stopCardToggle(event);deleteStudent('${s.id}')">Delete</button></div></div></div>`;
-      }
+      function renderStudents(openStudentId = null) { renderGraduationStats(); const q = document.getElementById("search").value.toLowerCase(), y = document.getElementById("yearFilter").value, list = students.filter((s) => (!q || `${s.student_number} ${s.full_name}`.toLowerCase().includes(q)) && (!y || String(s.year_graduated) === y)); document.getElementById("studentList").innerHTML = list.length ? list.map(studentCard).join("") : '<div class="panel" style="padding:40px;text-align:center;color:#4b5670">No students found.</div>'; document.getElementById("studentCount").textContent = students.length; document.getElementById("submittedCount").textContent = docs.filter((d) => d.is_submitted).length; document.getElementById("requiredCount").textContent = students.length * docTypes.filter((t) => t.is_required).length; if (openStudentId) document.getElementById("card-" + openStudentId)?.classList.add("open"); }
+      function studentCard(s) { const [label, cls] = stamp(s.id); return `<div class="card" id="card-${s.id}"><div class="head" onclick="toggleCard('${s.id}')"><span class="id">${esc(s.student_number)}</span><span class="name">${esc(s.full_name)}</span><span class="meta">${esc(s.year_graduated || "")}</span><span class="stamp ${cls}">${label}</span><span>›</span></div><div class="body">${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map((t) => docRow(s, t, true)).join("")}</div><div class="actions"><button class="small" onclick="stopCardToggle(event);editStudent('${s.id}')">Edit</button><button class="small danger" onclick="stopCardToggle(event);deleteStudent('${s.id}')">Delete</button></div></div></div>`; }
       function detailHtml(s) { return `<div class="grid"><div><div class="k">Student ID</div><div class="v">${esc(s.student_number)}</div></div><div><div class="k">Full name</div><div class="v">${esc(s.full_name)}</div></div><div><div class="k">Sex</div><div class="v">${esc(s.sex)}</div></div><div><div class="k">Date of birth</div><div class="v">${esc(s.date_of_birth)}</div></div><div><div class="k">Contact</div><div class="v">${esc(s.contact_number)}</div></div><div><div class="k">Email</div><div class="v">${esc(s.email)}</div></div><div><div class="k">Provincial address</div><div class="v">${esc(s.provincial_address)}</div></div><div><div class="k">City address</div><div class="v">${esc(s.city_address)}</div></div><div><div class="k">Year graduated</div><div class="v">${esc(s.year_graduated)}</div></div><div><div class="k">Year residency</div><div class="v">${esc(s.year_residency)}</div></div></div>`; }
-      function docRow(s,t,admin) { const d=docs.find(x=>x.student_id===s.id&&x.document_type_id===t.id), checked=!!d?.is_submitted; return `<div class="doc ${checked?"checked":""}"><span class="check" onclick="stopCardToggle(event);toggleDoc('${s.id}','${t.id}',${checked})">${checked?"✓":""}</span><span class="doclabel">${esc(t.name)}${t.is_required?" *":""}</span>${d?.file_url?`<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}" onclick="stopCardToggle(event)">Open file</a>`:""}<input onclick="stopCardToggle(event)" id="url-${s.id}-${t.id}" placeholder="Document URL" value="${esc(d?.file_url||"")}"><button class="btn small" onclick="stopCardToggle(event);saveDoc('${s.id}','${t.id}')">Save</button>${d?.file_url?`<button class="btn small danger" onclick="stopCardToggle(event);removeDoc('${s.id}','${t.id}')">Remove</button>`:""}</div>`; }
-      function toggleCard(id) { const card=document.getElementById("card-"+id); if(!card)return; document.querySelectorAll(".card.open").forEach(c=>{if(c!==card)c.classList.remove("open")}); card.classList.toggle("open"); }
+      function docRow(s, t, admin) { const d = docs.find((x) => x.student_id === s.id && x.document_type_id === t.id), checked = !!d?.is_submitted; return `<div class="doc ${checked ? "checked" : ""}"><span class="check" onclick="stopCardToggle(event);toggleDoc('${s.id}','${t.id}',${checked})">${checked ? "✓" : ""}</span><span class="doclabel">${esc(t.name)}${t.is_required ? " *" : ""}</span>${d?.file_url ? `<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}" onclick="stopCardToggle(event)">Open file</a>` : ""}<input onclick="stopCardToggle(event)" id="url-${s.id}-${t.id}" placeholder="Document URL" value="${esc(d?.file_url || "")}"><button class="btn small" onclick="stopCardToggle(event);saveDoc('${s.id}','${t.id}')">Save</button>${d?.file_url ? `<button class="btn small danger" onclick="stopCardToggle(event);removeDoc('${s.id}','${t.id}')">Remove</button>` : ""}</div>`; }
+      function toggleCard(id) { const card = document.getElementById("card-" + id); if (!card) return; document.querySelectorAll(".card.open").forEach((c) => { if (c !== card) c.classList.remove("open"); }); card.classList.toggle("open"); }
       function stopCardToggle(e) { e.stopPropagation(); }
-      async function toggleDoc(studentId,typeId,checked) { const {data,error}=await sb.from("student_documents").upsert({student_id:studentId,document_type_id:typeId,is_submitted:!checked,submitted_at:!checked?new Date().toISOString():null},{onConflict:"student_id,document_type_id"}).select().single(); if(error){alert(error.message);return;} const i=docs.findIndex(d=>d.student_id===studentId&&d.document_type_id===typeId); if(i>=0)docs[i]=data;else docs.push(data); renderStudents(studentId); }
-      async function saveDoc(studentId,typeId) { const input=document.getElementById(`url-${studentId}-${typeId}`); const file_url=input.value.trim(); const {data,error}=await sb.from("student_documents").upsert({student_id:studentId,document_type_id:typeId,is_submitted:true,file_url,submitted_at:new Date().toISOString()},{onConflict:"student_id,document_type_id"}).select().single(); if(error){alert(error.message);return;} const i=docs.findIndex(d=>d.student_id===studentId&&d.document_type_id===typeId); if(i>=0)docs[i]=data;else docs.push(data); renderStudents(studentId); }
-      async function removeDoc(studentId,typeId) { const {data,error}=await sb.from("student_documents").upsert({student_id:studentId,document_type_id:typeId,is_submitted:false,file_url:null,submitted_at:null},{onConflict:"student_id,document_type_id"}).select().single(); if(error){alert(error.message);return;} const i=docs.findIndex(d=>d.student_id===studentId&&d.document_type_id===typeId); if(i>=0)docs[i]=data;else docs.push(data); renderStudents(studentId); }
-      function stamp(studentId) { const total=docTypes.length, complete=docs.filter(d=>d.student_id===studentId&&d.is_submitted).length; if(total===0||complete===total)return ["Complete","complete"]; if(complete===0)return ["No documents","empty"]; return [`${complete}/${total} submitted`,"partial"]; }
-      function openStudentModal(id=null) { editingId=id; document.getElementById("modalTitle").textContent=id?"Edit student":"Add student"; clearError("modalError"); document.getElementById("studentModal").classList.add("open"); if(id){const s=students.find(x=>x.id===id); if(!s)return; document.getElementById("fNumber").value=s.student_number||"";document.getElementById("fName").value=s.full_name||"";document.getElementById("fSex").value=s.sex||"";document.getElementById("fDob").value=s.date_of_birth||"";document.getElementById("fContact").value=s.contact_number||"";document.getElementById("fEmail").value=s.email||"";document.getElementById("fProv").value=s.provincial_address||"";document.getElementById("fCity").value=s.city_address||"";document.getElementById("fGrad").value=s.year_graduated??"";document.getElementById("fResid").value=s.year_residency??"";document.getElementById("fPassword").value="";document.getElementById("fPasswordConfirm").value="";}else{["fNumber","fName","fDob","fContact","fEmail","fProv","fCity","fGrad","fResid","fPassword","fPasswordConfirm"].forEach(id=>document.getElementById(id).value="");document.getElementById("fSex").value="";} }
-      function closeStudentModal(){document.getElementById("studentModal").classList.remove("open");}
-      async function saveStudent(){ clearError("modalError"); const payload={student_number:document.getElementById("fNumber").value.trim(),full_name:document.getElementById("fName").value.trim(),sex:document.getElementById("fSex").value||null,date_of_birth:document.getElementById("fDob").value||null,contact_number:document.getElementById("fContact").value.trim()||null,email:document.getElementById("fEmail").value.trim()||null,provincial_address:document.getElementById("fProv").value.trim()||null,city_address:document.getElementById("fCity").value.trim()||null,year_graduated:document.getElementById("fGrad").value?Number(document.getElementById("fGrad").value):null,year_residency:document.getElementById("fResid").value?Number(document.getElementById("fResid").value):null}; const pw=document.getElementById("fPassword").value; const pc=document.getElementById("fPasswordConfirm").value; if(pw&&pw.length<8){setError("modalError","Password must be at least 8 characters.");return;} if(pw!==pc){setError("modalError","Passwords do not match.");return;} try { if(editingId){const {data,error}=await sb.from("students").update(payload).eq("id",editingId).select().single();if(error)throw error;const i=students.findIndex(s=>s.id===editingId);if(i>=0)students[i]=data;}else{const {data,error}=await sb.functions.invoke("create-student",{body:{...payload,password:pw||null}});if(error)throw error;if(!data?.student)throw new Error(data?.error||"Unable to create student.");students.push(data.student);} closeStudentModal(); await loadAdminData(); } catch(e){setError("modalError",e.message||"Unable to save student.");} }
-      function editStudent(id){openStudentModal(id)}
-      async function deleteStudent(id){if(!confirm("Delete this student and their documents?"))return; const {error}=await sb.from("students").delete().eq("id",id);if(error){alert(error.message);return;}students=students.filter(s=>s.id!==id);docs=docs.filter(d=>d.student_id!==id);renderStudents();}
-      async function loadStudentProfile(studentId){const {data:s,error:se}=await sb.from("students").select("*").eq("id",studentId).single();const {data:d,error:de}=await sb.from("student_documents").select("*").eq("student_id",studentId);const {data:t,error:te}=await sb.from("document_types").select("*").order("name");if(se||de||te)throw se||de||te;const student=s; document.getElementById("studentProfile").innerHTML=`<div class="panel" style="padding:20px"><h2 style="font:500 22px Georgia,serif;margin-top:0">${esc(student.full_name)}</h2>${detailHtml(student)}<div class="docs"><h3>Document checklist</h3>${(t||[]).map(dt=>{const row=(d||[]).find(x=>x.document_type_id===dt.id);return `<div class="doc ${row?.is_submitted?"checked":""}"><span class="check">${row?.is_submitted?"✓":""}</span><span class="doclabel">${esc(dt.name)}${dt.is_required?" *":""}</span>${row?.file_url?`<a class="link" target="_blank" rel="noopener" href="${esc(row.file_url)}">Open file</a>`:"<span class="meta">Not submitted</span>"}</div>`}).join("")}</div></div>`;}
-      function signOut(){sb.auth.signOut();session=null;document.getElementById("app").classList.add("hidden");document.getElementById("login").classList.remove("hidden");document.getElementById("loginPassword").value="";}
-      function openForgotPassword(){clearError("forgotError");forgotEmail="";document.getElementById("forgotEmail").value="";document.getElementById("forgotOtp").value="";document.getElementById("forgotNewPassword").value="";document.getElementById("forgotConfirmPassword").value="";document.getElementById("forgotStep1").classList.remove("hidden");document.getElementById("forgotStep2").classList.add("hidden");document.getElementById("forgotDescription").textContent="Enter your admin email. A one-time password will be sent to that email for verification.";document.getElementById("forgotModal").classList.add("open");}
-      function closeForgotPassword(){document.getElementById("forgotModal").classList.remove("open");}
-      async function sendAdminOtp(){clearError("forgotError");const email=document.getElementById("forgotEmail").value.trim();if(!email){setError("forgotError","Enter your admin email.");return;}try{const {error}=await sb.auth.resetPasswordForEmail(email);if(error)throw error;forgotEmail=email;document.getElementById("forgotStep1").classList.add("hidden");document.getElementById("forgotStep2").classList.remove("hidden");document.getElementById("forgotDescription").textContent="Enter the 8-digit OTP sent to your email, then choose a new password.";}catch(e){setError("forgotError",e.message||"Unable to send OTP.");}}
-      async function verifyAdminOtpAndReset(){clearError("forgotError");const token=document.getElementById("forgotOtp").value.trim();const p=document.getElementById("forgotNewPassword").value;const c=document.getElementById("forgotConfirmPassword").value;if(!/^\d{8}$/.test(token)){setError("forgotError","Enter the 8-digit OTP.");return;}if(p.length<8){setError("forgotError","Password must be at least 8 characters.");return;}if(p!==c){setError("forgotError","Passwords do not match.");return;}try{const {data,error}=await sb.auth.verifyOtp({email:forgotEmail,token,type:"recovery"});if(error)throw error;if(data?.session){const {error:ue}=await sb.auth.updateUser({password:p});if(ue)throw ue;}else throw new Error("OTP verified, but no recovery session was created.");closeForgotPassword();alert("Password updated successfully. You can now sign in with your new password.");await sb.auth.signOut();}catch(e){setError("forgotError",e.message||"OTP verification failed.");}}
-      sb.auth.onAuthStateChange(async (_event,s)=>{if(s&&!session){session=s;await enterApp();}});
+      async function ensureDocs(studentId) { for (const t of docTypes) { await sb.from("student_documents").upsert({ student_id: studentId, document_type_id: t.id, is_submitted: false }, { onConflict: "student_id,document_type_id", ignoreDuplicates: true }); } await refreshData(); }
+      async function toggleDoc(studentId, typeId, checked) { const payload = { student_id: studentId, document_type_id: typeId, is_submitted: !checked, submitted_at: !checked ? new Date().toISOString() : null }; const { error } = await sb.from("student_documents").upsert(payload, { onConflict: "student_id,document_type_id" }); if (error) alert(error.message); else await refreshData(studentId); }
+      async function saveDoc(studentId, typeId) { const url = document.getElementById(`url-${studentId}-${typeId}`).value.trim(), { error } = await sb.from("student_documents").upsert({ student_id: studentId, document_type_id: typeId, is_submitted: !!url, file_url: url || null, submitted_at: url ? new Date().toISOString() : null }, { onConflict: "student_id,document_type_id" }); if (error) alert(error.message); else await refreshData(studentId); }
+      async function removeDoc(studentId, typeId) { const d = docs.find((x) => x.student_id === studentId && x.document_type_id === typeId); if (!d) return; const { error } = await sb.from("student_documents").update({ file_url: null, is_submitted: false, submitted_at: null }).eq("id", d.id); if (error) alert(error.message); else await refreshData(studentId); }
+      function openStudentModal(s) { editingId = s?.id || null; document.getElementById("modalTitle").textContent = editingId ? "Edit student" : "Add student"; document.getElementById("fNumber").value = s?.student_number || ""; document.getElementById("fNumber").disabled = !!editingId; document.getElementById("fName").value = s?.full_name || ""; document.getElementById("fSex").value = s?.sex || ""; document.getElementById("fDob").value = s?.date_of_birth || ""; document.getElementById("fContact").value = s?.contact_number || ""; document.getElementById("fEmail").value = s?.email || ""; document.getElementById("fProv").value = s?.provincial_address || ""; document.getElementById("fCity").value = s?.city_address || ""; document.getElementById("fGrad").value = s?.year_graduated || ""; document.getElementById("fResid").value = s?.year_residency || ""; document.getElementById("fPassword").value = ""; document.getElementById("fPasswordConfirm").value = ""; document.getElementById("modalError").classList.add("hidden"); document.getElementById("studentModal").classList.add("open"); }
+      function closeStudentModal() { document.getElementById("studentModal").classList.remove("open"); }
+      function editStudent(id) { const s = students.find((x) => x.id === id); if (s) openStudentModal(s); }
+      async function saveStudent() { const number = document.getElementById("fNumber").value.trim(), name = document.getElementById("fName").value.trim(), password = document.getElementById("fPassword").value, passwordConfirm = document.getElementById("fPasswordConfirm").value; if (!number || !name) { modalMsg("Student ID and full name are required."); return; } if (password && password.length < 8) { modalMsg("Student password must be at least 8 characters."); return; } if (password !== passwordConfirm) { modalMsg(password ? "Confirmation Password does not match the student password." : "Please leave Confirmation Password blank when no student password is entered."); return; } const payload = { student_number: number, full_name: name, sex: document.getElementById("fSex").value || null, date_of_birth: document.getElementById("fDob").value || null, contact_number: document.getElementById("fContact").value.trim() || null, email: document.getElementById("fEmail").value.trim() || null, provincial_address: document.getElementById("fProv").value.trim() || null, city_address: document.getElementById("fCity").value.trim() || null, year_graduated: Number(document.getElementById("fGrad").value) || null, year_residency: Number(document.getElementById("fResid").value) || null }; let studentId = editingId; if (editingId) { const { error } = await sb.from("students").update(payload).eq("id", editingId); if (error) { modalMsg(error.message); return; } } else { const { data, error } = await sb.from("students").insert(payload).select().single(); if (error) { modalMsg(error.message); return; } studentId = data.id; } await refreshData(); await ensureDocs(studentId); if (password) { const { data: fn, error } = await sb.functions.invoke("create-student-account", { body: { student_id: studentId, student_number: number, password } }); if (error || fn?.error) { modalMsg(error?.message || fn?.error || "Could not create the student login account."); return; } } closeStudentModal(); await refreshData(); }
+      function modalMsg(t) { const e = document.getElementById("modalError"); e.textContent = t; e.classList.remove("hidden"); }
+      async function deleteStudent(id) { const s = students.find((x) => x.id === id); if (!s || !confirm(`Delete ${s.full_name}? This also removes their document records.`)) return; const { error } = await sb.from("students").delete().eq("id", id); if (error) alert(error.message); else await refreshData(); }
+      async function refreshData(openStudentId) { if (arguments.length === 0) openStudentId = document.querySelector(".card.open")?.id?.replace("card-", "") || null; const a = await Promise.all([sb.from("students").select("*").order("student_number"), sb.from("student_documents").select("*")]); if (!a[0].error) { students = a[0].data || []; docs = a[1].data || []; fillYears(); renderStudents(openStudentId); } }
+      async function loadStudent() { const { data: acct, error } = await sb.from("student_accounts").select("student_id").eq("user_id", currentUser.id).maybeSingle(); if (error || !acct) { document.getElementById("studentProfile").innerHTML = '<div class="panel" style="padding:25px">Student account is not linked to a student record.</div>'; return; } const a = await Promise.all([sb.from("students").select("*").eq("id", acct.student_id).single(), sb.from("document_types").select("*").order("name"), sb.from("student_documents").select("*").eq("student_id", acct.student_id)]); if (a[0].error) { document.getElementById("studentProfile").innerHTML = '<div class="panel" style="padding:25px">Unable to load your record.</div>'; return; } students = [a[0].data]; docTypes = a[1].data || []; docs = a[2].data || []; const s = students[0]; document.getElementById("studentProfile").innerHTML = `<div class="card"><div class="body" style="display:block"><h2 style="font:500 25px Georgia,serif;margin:0 0 4px">${esc(s.full_name)}</h2><p class="meta" style="margin:0 0 20px">Student ID: ${esc(s.student_number)}</p>${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map((t) => studentDocView(s, t)).join("")}</div></div></div>`; }
+      function studentDocView(s, t) { const d = docs.find((x) => x.document_type_id === t.id); return `<div class="doc ${d?.is_submitted ? "checked" : ""}"><span class="check" style="cursor:default">${d?.is_submitted ? "✓" : ""}</span><span class="doclabel">${esc(t.name)}${t.is_required ? " *" : ""}</span>${d?.file_url ? `<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}">View document</a>` : ""}<span style="font-size:11px;color:#8b8578">${d?.is_submitted ? "Submitted" : "Not submitted"}</span></div>`; }
+      function subscribeRealtime() { if (channel) sb.removeChannel(channel); channel = sb.channel("nursync-live").on("postgres_changes", { event: "*", schema: "public", table: "students" }, () => loginMode === "admin" && refreshData()).on("postgres_changes", { event: "*", schema: "public", table: "student_documents" }, () => (loginMode === "admin" ? refreshData() : loadStudent())).subscribe(); }
+      async function signOut() { if (channel) sb.removeChannel(channel); channel = null; await sb.auth.signOut(); currentUser = null; document.getElementById("app").classList.add("hidden"); document.getElementById("login").classList.remove("hidden"); showLogin("admin"); }
+      sb.auth.getSession().then(({ data }) => { if (data.session) { currentUser = data.session.user; routeUser(); } });
     </script>
   </body>
 </html>

@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
             <div style="margin:24px 0;padding:18px;background:#f1efe8;border-radius:8px;text-align:center;font-size:32px;font-weight:bold;letter-spacing:8px;">
               ${otp}
             </div>
-            <p>Enter this 6-digit code in the NuRSYNC Student Registry system to continue.</p>
+            <p>Enter this 8-digit code in the NuRSYNC Student Registry system to continue.</p>
             <p style="color:#777;font-size:13px;">If you did not request a password reset, you can safely ignore this email.</p>
           </div>
         </body>
@@ -91,7 +91,7 @@ Your verification code is:
 
 ${otp}
 
-Enter this 6-digit code in the NuRSYNC Student Registry system to continue.
+Enter this 8-digit code in the NuRSYNC Student Registry system to continue.
 
 If you did not request a password reset, you can safely ignore this email.`
 

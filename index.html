@@ -724,24 +724,30 @@
         if (reqDone === required.length) return [`${n} / ${total}`, "complete"];
         return [`${n} / ${total}`, "partial"];
       }
-      function renderStudents() {
+      function renderStudents(openStudentId = null) {
         const q = document.getElementById("search").value.toLowerCase();
         const y = document.getElementById("yearFilter").value;
+
         const list = students.filter(
           (s) =>
             (!q ||
               `${s.student_number} ${s.full_name}`.toLowerCase().includes(q)) &&
             (!y || String(s.year_graduated) === y),
         );
+
         document.getElementById("studentList").innerHTML = list.length
           ? list.map(studentCard).join("")
           : '<div class="panel" style="padding:40px;text-align:center;color:#4b5670">No students found.</div>';
+
         document.getElementById("studentCount").textContent = students.length;
-        document.getElementById("submittedCount").textContent = docs.filter(
-          (d) => d.is_submitted,
-        ).length;
+        document.getElementById("submittedCount").textContent =
+          docs.filter((d) => d.is_submitted).length;
         document.getElementById("requiredCount").textContent =
           students.length * docTypes.filter((t) => t.is_required).length;
+
+        if (openStudentId) {
+          document.getElementById(`card-${openStudentId}`)?.classList.add("open");
+        }
       }
       function studentCard(s) {
         const [label, cls] = stamp(s.id);
@@ -793,23 +799,26 @@
         else await refreshData();
       }
       async function saveDoc(studentId, typeId) {
-        const url = document
-          .getElementById(`url-${studentId}-${typeId}`)
-          .value.trim();
-        const d = docs.find(
-          (x) => x.student_id === studentId && x.document_type_id === typeId,
-        );
+        const input = document.getElementById(`url-${studentId}-${typeId}`);
+        const url = input.value.trim();
+
         const { error } = await sb.from("student_documents").upsert(
           {
             student_id: studentId,
             document_type_id: typeId,
-            is_submitted: d?.is_submitted || false,
+            is_submitted: !!url,
             file_url: url || null,
+            submitted_at: url ? new Date().toISOString() : null,
           },
           { onConflict: "student_id,document_type_id" },
         );
-        if (error) alert(error.message);
-        else await refreshData();
+
+        if (error) {
+          alert(error.message);
+          return;
+        }
+
+        await refreshData(studentId);
       }
       async function removeDoc(studentId, typeId) {
         const d = docs.find(
@@ -939,16 +948,17 @@
         if (error) alert(error.message);
         else await refreshData();
       }
-      async function refreshData() {
+      async function refreshData(openStudentId = null) {
         const a = await Promise.all([
           sb.from("students").select("*").order("student_number"),
           sb.from("student_documents").select("*"),
         ]);
+
         if (!a[0].error) {
           students = a[0].data || [];
           docs = a[1].data || [];
           fillYears();
-          renderStudents();
+          renderStudents(openStudentId);
         }
       }
       async function loadStudent() {

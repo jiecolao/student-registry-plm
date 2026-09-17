@@ -789,10 +789,7 @@
           forgotMsg("Enter the admin email address.");
           return;
         }
-        const { error } = await sb.auth.signInWithOtp({
-          email,
-          options: { shouldCreateUser: false },
-        });
+        const { error } = await sb.auth.resetPasswordForEmail(email);
         if (error) {
           forgotMsg(error.message);
           return;
@@ -812,7 +809,7 @@
         const { data, error } = await sb.auth.verifyOtp({
           email: forgotEmail,
           token,
-          type: "email",
+          type: "recovery",
         });
         if (error) {
           forgotMsg(`OTP verification failed: ${error.message}`);

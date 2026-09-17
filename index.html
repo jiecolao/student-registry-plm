@@ -454,17 +454,17 @@
       <div class="gate-box">
         <div class="mark"><img src="logo.png" alt="NurSync" /></div>
         <h1>NurSync</h1>
-        <p class="sub">Student Registry &amp; Document Management</p>
+        <p class="sub">File Management System</p>
         <div class="tabs">
           <button id="adminTab" class="tab active" onclick="showLogin('admin')">
-            Registrar</button
+            Admin</button
           ><button id="studentTab" class="tab" onclick="showLogin('student')">
             Student
           </button>
         </div>
         <div id="loginError" class="error hidden"></div>
         <form id="loginForm">
-          <label id="loginIdLabel">Registrar email</label
+          <label id="loginIdLabel">Admin email</label
           ><input
             id="loginId"
             type="email"
@@ -617,10 +617,10 @@
           .classList.toggle("active", mode === "student");
         const label = document.getElementById("loginIdLabel");
         const input = document.getElementById("loginId");
-        label.textContent = mode === "admin" ? "Registrar email" : "Student ID";
+        label.textContent = mode === "admin" ? "Admin email" : "Student ID";
         input.type = mode === "admin" ? "email" : "text";
         input.placeholder =
-          mode === "admin" ? "registrar@example.com" : "2024-001";
+          mode === "admin" ? "admin@example.com" : "2024-001";
         input.value = "";
         document.getElementById("loginError").classList.add("hidden");
       }
@@ -662,14 +662,14 @@
         if (error || !data) {
           await sb.auth.signOut();
           msg(
-            "Your account is not assigned a NurSync role. Ask the registrar to configure it.",
+            "Your account is not assigned a NurSync role. Ask the admin to configure it.",
           );
           return;
         }
         document.getElementById("login").classList.add("hidden");
         document.getElementById("app").classList.remove("hidden");
         document.getElementById("roleLabel").textContent =
-          data.role === "admin" ? "Registrar" : "Student";
+          data.role === "admin" ? "Admin" : "Student";
         if (data.role === "admin") {
           document.getElementById("adminView").classList.remove("hidden");
           document.getElementById("studentView").classList.add("hidden");

@@ -1,0 +1,86 @@
+name: Apply graduation analytics
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add graduation analytics to index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          css = '''
+      .grad-analytics {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .grad-stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 15px;
+      }
+      .grad-stat .num { font-size: 25px; }
+      .grad-stat .lbl { margin-top: 2px; }
+'''
+          marker = '''      @media (max-width: 650px) {'''
+          if '.grad-analytics {' not in s:
+              s = s.replace(marker, css + marker, 1)
+
+          html_marker = '''          <div class="controls">'''
+          html = '''          <div id="graduationStats" class="grad-analytics"></div>
+'''
+          if 'id="graduationStats"' not in s:
+              s = s.replace(html_marker, html + html_marker, 1)
+
+          fn_marker = '''      function renderStudents(openStudentId = null) {'''
+          fn = '''      function renderGraduationStats() {
+        const container = document.getElementById("graduationStats");
+        if (!container) return;
+        const counts = new Map();
+        students.forEach((student) => {
+          if (student.year_graduated !== null && student.year_graduated !== undefined && student.year_graduated !== "") {
+            const year = String(student.year_graduated);
+            counts.set(year, (counts.get(year) || 0) + 1);
+          }
+        });
+        const years = [...counts.keys()].sort((a, b) => Number(a) - Number(b));
+        container.innerHTML = years.length
+          ? years.map((year) => `<div class="grad-stat"><div class="num">${counts.get(year)}</div><div class="lbl">Graduates of ${esc(year)}</div></div>`).join("")
+          : '<div class="panel" style="padding:15px;color:#4b5670">No graduation-year data available.</div>';
+      }
+'''
+          if 'function renderGraduationStats()' not in s:
+              s = s.replace(fn_marker, fn + fn_marker, 1)
+
+          render_marker = '''      function renderStudents(openStudentId = null) {
+        const q ='''
+          if render_marker in s:
+              s = s.replace(render_marker, '''      function renderStudents(openStudentId = null) {
+        renderGraduationStats();
+        const q =''', 1)
+
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit generated index.html
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "Add graduation year analytics"
+          git push

@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,7 +6,9 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
 
   try {
     const authHeader = req.headers.get('Authorization')
@@ -20,7 +22,10 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     })
 
-    const { data: { user } } = await userClient.auth.getUser()
+    const {
+      data: { user },
+    } = await userClient.auth.getUser()
+
     if (!user) throw new Error('Not authenticated')
 
     const { data: adminRole, error: roleError } = await userClient
@@ -41,7 +46,10 @@ Deno.serve(async (req) => {
     if (!studentId || !studentNumber || !password) {
       throw new Error('student_id, student_number, and password are required')
     }
-    if (password.length < 8) throw new Error('Password must be at least 8 characters')
+
+    if (password.length < 8) {
+      throw new Error('Password must be at least 8 characters')
+    }
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
@@ -50,10 +58,16 @@ Deno.serve(async (req) => {
       .select('id, student_number')
       .eq('id', studentId)
       .single()
-    if (studentError) throw studentError
-    if (student.student_number !== studentNumber) throw new Error('Student number does not match the student record')
 
-    const syntheticEmail = `${studentNumber.toLowerCase().replace(/[^a-z0-9._-]/g, '-') }@students.nursync.internal`
+    if (studentError) throw studentError
+
+    if (student.student_number !== studentNumber) {
+      throw new Error('Student number does not match the student record')
+    }
+
+    const syntheticEmail = `${studentNumber
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '-') }@students.nursync.internal`
 
     const { data: existingAccount } = await adminClient
       .from('student_accounts')
@@ -64,7 +78,10 @@ Deno.serve(async (req) => {
     let userId = existingAccount?.user_id
 
     if (userId) {
-      const { error } = await adminClient.auth.admin.updateUserById(userId, { password })
+      const { error } = await adminClient.auth.admin.updateUserById(userId, {
+        password,
+      })
+
       if (error) throw error
     } else {
       const { data: created, error } = await adminClient.auth.admin.createUser({
@@ -72,12 +89,15 @@ Deno.serve(async (req) => {
         password,
         email_confirm: true,
       })
+
       if (error) throw error
+
       userId = created.user.id
 
       const { error: accountError } = await adminClient
         .from('student_accounts')
         .insert({ user_id: userId, student_id: studentId })
+
       if (accountError) {
         await adminClient.auth.admin.deleteUser(userId)
         throw accountError
@@ -86,6 +106,7 @@ Deno.serve(async (req) => {
       const { error: roleInsertError } = await adminClient
         .from('user_roles')
         .insert({ user_id: userId, role: 'student' })
+
       if (roleInsertError) {
         await adminClient.from('student_accounts').delete().eq('user_id', userId)
         await adminClient.auth.admin.deleteUser(userId)
@@ -98,9 +119,14 @@ Deno.serve(async (req) => {
       status: 200,
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    })
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : String(error),
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      },
+    )
   }
 })

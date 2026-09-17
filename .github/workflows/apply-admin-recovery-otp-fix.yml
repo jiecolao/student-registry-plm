@@ -1,0 +1,55 @@
+name: Apply admin recovery OTP fix
+
+on:
+  push:
+    branches:
+      - migration/nursync-supabase-v2
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: migration/nursync-supabase-v2
+
+      - name: Update admin forgot-password flow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("index.html")
+          text = path.read_text(encoding="utf-8")
+
+          old_send = '''const { error } = await sb.auth.signInWithOtp({
+            email,
+            options: { shouldCreateUser: false },
+          });'''
+          new_send = '''const { error } = await sb.auth.resetPasswordForEmail(email);'''
+
+          if old_send not in text:
+              raise SystemExit("Expected signInWithOtp block was not found")
+          text = text.replace(old_send, new_send, 1)
+
+          old_verify = '''          type: "email",'''
+          new_verify = '''          type: "recovery",'''
+
+          if old_verify not in text:
+              raise SystemExit("Expected email OTP verification type was not found")
+          text = text.replace(old_verify, new_verify, 1)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-admin-recovery-otp-fix.yml
+          git add index.html
+          git commit -m "fix: use recovery OTP for admin password reset"
+          git push origin migration/nursync-supabase-v2

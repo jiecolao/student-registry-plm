@@ -1,56 +1,1022 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NurSync</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-:root{--paper:#f6f3ec;--card:#fff;--ink:#1b2a4a;--soft:#4b5670;--muted:#8b8578;--line:#dcd6c8;--green:#3f6b4e;--deep:#2c4a37;--greenbg:#e7efe8;--red:#b23a34;--redbg:#f6e4e1;--amber:#a6621b;--amberbg:#f5eada;--gold:#c9a66b}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif}.gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}.gate-box{width:min(440px,100%);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:32px;box-shadow:0 10px 30px #1b2a4a12}.mark{width:64px;height:64px;border:2px solid var(--green);border-radius:50%;overflow:hidden;margin:0 auto 18px}.mark img{width:100%;height:100%;object-fit:cover}.gate h1{text-align:center;font-family:Georgia,serif;font-weight:500;margin:0 0 6px;font-size:32px}.sub{text-align:center;color:var(--soft);font-size:14px;margin:0 0 24px}.tabs{display:flex;gap:8px;margin-bottom:20px}.tabs button{flex:1}.tab{padding:9px;border:1px solid var(--line);background:#fff;border-radius:8px;cursor:pointer}.tab.active{background:var(--green);color:#fff;border-color:var(--green)}label{display:block;font-size:12px;color:var(--soft);font-weight:600;margin:0 0 6px}input,select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);font:inherit;margin-bottom:14px}button{font:inherit}.btn{width:100%;padding:10px 16px;border:1px solid var(--green);border-radius:8px;background:var(--green);color:#fff;cursor:pointer}.btn:hover{background:var(--deep)}.error{color:var(--red);background:var(--redbg);padding:9px 11px;border-radius:8px;font-size:13px;margin-bottom:14px}.hidden{display:none!important}.topbar{background:var(--deep);color:#efeae0;padding:14px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px}.brand{display:flex;align-items:center;gap:10px}.brand img{width:36px;height:36px;border-radius:50%;border:1px solid var(--gold);object-fit:cover}.brand strong{font-family:Georgia,serif;font-weight:500}.role{display:block;color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:.08em}.signout{padding:7px 13px;border:1px solid #ffffff44;background:transparent;color:#fff;border-radius:7px;cursor:pointer}.main{max-width:1100px;margin:auto;padding:26px 24px 70px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}.stat,.panel,.card{background:#fff;border:1px solid var(--line);border-radius:12px}.stat{padding:15px}.num{font-family:Georgia,serif;font-size:25px}.lbl{font-size:12px;color:var(--soft)}.controls{padding:13px;display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}.controls input,.controls select{margin:0}.controls input{flex:1;min-width:220px}.controls select{width:auto}.add{width:auto;white-space:nowrap}.card{overflow:hidden;margin-bottom:10px}.head{padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}.id{font-family:monospace;font-size:12px;background:var(--greenbg);color:var(--deep);padding:5px 8px;border-radius:6px}.name{font-family:Georgia,serif;font-size:17px;flex:1}.meta{font-size:12px;color:var(--soft)}.stamp{font-family:monospace;font-size:11px;padding:5px 9px;border-radius:14px}.complete{background:var(--greenbg);color:var(--deep)}.partial{background:var(--amberbg);color:var(--amber)}.empty{background:var(--redbg);color:var(--red)}.body{display:none;border-top:1px solid var(--line);padding:18px;background:#fcfaf5}.card.open .body{display:block}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:20px}.k{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}.v{font-size:14px;margin-top:3px}.docs h3{font:500 15px Georgia,serif;margin:0 0 10px}.doc{display:flex;align-items:center;gap:10px;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:8px;margin-bottom:7px;flex-wrap:wrap}.doc.checked{border-color:var(--green);background:var(--greenbg)}.check{width:19px;height:19px;border:1px solid var(--muted);border-radius:5px;display:flex;align-items:center;justify-content:center;cursor:pointer}.checked .check{background:var(--green);color:#fff;border-color:var(--green)}.doclabel{flex:1;min-width:150px;font-size:13px}.doc input{width:190px;margin:0;padding:6px 8px;font-size:12px}.small{width:auto;padding:6px 10px;font-size:12px}.link{font-size:12px;color:var(--deep);text-decoration:underline}.actions{display:flex;gap:8px;margin-top:15px}.danger{border-color:var(--red);color:var(--red);background:#fff}.modal{position:fixed;inset:0;background:#1b2a4a66;display:none;align-items:flex-start;justify-content:center;padding:35px 16px;overflow:auto;z-index:10}.modal.open{display:flex}.modal-box{background:#fff;border-radius:14px;padding:24px;width:min(650px,100%)}.modal h2{font:500 21px Georgia,serif;margin:0 0 5px}.modal p{color:var(--soft);font-size:13px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}.modal-actions{display:flex;gap:8px}.modal-actions button{flex:1}.cancel{background:#fff;color:var(--ink);border-color:var(--line)}.notice{padding:11px;background:var(--amberbg);color:var(--amber);border-radius:8px;font-size:12px;margin-bottom:14px}@media(max-width:650px){.stats{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.topbar{padding:12px 16px}.main{padding:18px 12px}.meta{display:none}}
-</style>
-</head>
-<body>
-<div id="login" class="gate"><div class="gate-box"><div class="mark"><img src="logo.png" alt="NurSync"></div><h1>NurSync</h1><p class="sub">Student Registry &amp; Document Management</p><div class="tabs"><button id="adminTab" class="tab active" onclick="showLogin('admin')">Registrar</button><button id="studentTab" class="tab" onclick="showLogin('student')">Student</button></div><div id="loginError" class="error hidden"></div><form id="loginForm"><label id="loginIdLabel">Registrar email</label><input id="loginId" type="email" autocomplete="username" required><label>Password</label><input id="loginPassword" type="password" autocomplete="current-password" required><button class="btn" type="submit">Sign in</button></form></div></div>
-<div id="app" class="hidden"><header class="topbar"><div class="brand"><img src="logo.png" alt=""><div><strong>NurSync</strong><span id="roleLabel" class="role"></span></div></div><div><span id="sync" style="font-size:12px;margin-right:12px">● Live</span><button class="signout" onclick="signOut()">Sign out</button></div></header><main class="main"><div id="adminView" class="hidden"><div class="stats"><div class="stat"><div id="studentCount" class="num">0</div><div class="lbl">Students</div></div><div class="stat"><div id="submittedCount" class="num">0</div><div class="lbl">Documents submitted</div></div><div class="stat"><div id="requiredCount" class="num">0</div><div class="lbl">Required documents</div></div></div><div class="controls"><input id="search" placeholder="Search Student ID or name..." oninput="renderStudents()"><select id="yearFilter" onchange="renderStudents()"><option value="">All graduation years</option></select><button class="btn add" onclick="openStudentModal()">+ Add student</button></div><div id="studentList"></div></div><div id="studentView" class="hidden"><div id="studentProfile"></div></div></main></div>
-<div id="studentModal" class="modal"><div class="modal-box"><h2 id="modalTitle">Add student</h2><p>Student information and optional login password.</p><div id="modalError" class="error hidden"></div><div class="formgrid"><div><label>Student ID</label><input id="fNumber"></div><div><label>Full name</label><input id="fName"></div><div><label>Sex</label><select id="fSex"><option value="">Select</option><option>Male</option><option>Female</option></select></div><div><label>Date of birth</label><input id="fDob" type="date"></div><div><label>Contact number</label><input id="fContact"></div><div><label>Email</label><input id="fEmail" type="email"></div><div class="full"><label>Provincial address</label><input id="fProv"></div><div class="full"><label>City address</label><input id="fCity"></div><div><label>Year graduated</label><input id="fGrad" type="number"></div><div><label>Year residency</label><input id="fResid" type="number"></div><div class="full"><label>Student password <span style="font-weight:400;color:#8b8578">(optional; minimum 8 characters)</span></label><input id="fPassword" type="password" autocomplete="new-password"></div></div><div class="modal-actions"><button class="btn cancel" onclick="closeStudentModal()">Cancel</button><button class="btn" onclick="saveStudent()">Save student</button></div></div></div>
-<script>
-const SUPABASE_URL='https://kivbqllahiisffihnrgh.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_62AnaZ2qZYE8_i8RYapiug_1mcF0_Nd';
-const {createClient}=supabase; const sb=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
-const DOCS=['Personal Record','Academic Record','Completion and Certification Records','RLE / Clinical Records','Others'];
-let loginMode='admin', currentUser=null, students=[], docTypes=[], docs=[], editingId=null, channel=null;
-function esc(v){return String(v??'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;'}[m]||m))}
-function showLogin(mode){loginMode=mode;document.getElementById('adminTab').classList.toggle('active',mode==='admin');document.getElementById('studentTab').classList.toggle('active',mode==='student');const label=document.getElementById('loginIdLabel');const input=document.getElementById('loginId');label.textContent=mode==='admin'?'Registrar email':'Student ID';input.type=mode==='admin'?'email':'text';input.placeholder=mode==='admin'?'registrar@example.com':'2024-001';input.value='';document.getElementById('loginError').classList.add('hidden')}
-function syntheticEmail(number){return number.toLowerCase().replace(/[^a-z0-9._-]/g,'-')+'@students.nursync.internal'}
-function msg(text){const e=document.getElementById('loginError');e.textContent=text;e.classList.remove('hidden')}
-async function login(e){e.preventDefault();const id=document.getElementById('loginId').value.trim();const pass=document.getElementById('loginPassword').value;if(!id||!pass)return;const email=loginMode==='student'?syntheticEmail(id):id;const {data,error}=await sb.auth.signInWithPassword({email,password:pass});if(error){msg(`Sign in failed: ${error.message}`);return}currentUser=data.user;await routeUser()}
-document.getElementById('loginForm').addEventListener('submit',login);
-async function routeUser(){const {data,error}=await sb.from('user_roles').select('role').eq('user_id',currentUser.id).maybeSingle();if(error||!data){await sb.auth.signOut();msg('Your account is not assigned a NurSync role. Ask the registrar to configure it.');return}document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');document.getElementById('roleLabel').textContent=data.role==='admin'?'Registrar':'Student';if(data.role==='admin'){document.getElementById('adminView').classList.remove('hidden');document.getElementById('studentView').classList.add('hidden');await loadAdmin()}else{document.getElementById('studentView').classList.remove('hidden');document.getElementById('adminView').classList.add('hidden');await loadStudent()}subscribeRealtime()}
-async function loadAdmin(){const a=await Promise.all([sb.from('students').select('*').order('student_number'),sb.from('document_types').select('*').order('name'),sb.from('student_documents').select('*')]);if(a[0].error){alert(a[0].error.message);return}students=a[0].data||[];docTypes=a[1].data||[];docs=a[2].data||[];fillYears();renderStudents()}
-function fillYears(){const sel=document.getElementById('yearFilter');const old=sel.value;const years=[...new Set(students.map(s=>s.year_graduated).filter(Boolean))].sort((a,b)=>b-a);sel.innerHTML='<option value="">All graduation years</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');sel.value=old}
-function docsFor(id){return docs.filter(d=>d.student_id===id)}
-function stamp(id){const d=docsFor(id), required=docTypes.filter(t=>t.is_required), done=d.filter(x=>x.is_submitted);const n=done.length,total=docTypes.length,reqDone=required.filter(t=>d.some(x=>x.document_type_id===t.id&&x.is_submitted)).length;if(!total)return ['0 / 0','empty'];if(reqDone===required.length)return [`${n} / ${total}`,'complete'];return [`${n} / ${total}`,'partial']}
-function renderStudents(){const q=document.getElementById('search').value.toLowerCase();const y=document.getElementById('yearFilter').value;const list=students.filter(s=>(!q||`${s.student_number} ${s.full_name}`.toLowerCase().includes(q))&&(!y||String(s.year_graduated)===y));document.getElementById('studentList').innerHTML=list.length?list.map(studentCard).join(''):'<div class="panel" style="padding:40px;text-align:center;color:#4b5670">No students found.</div>';document.getElementById('studentCount').textContent=students.length;document.getElementById('submittedCount').textContent=docs.filter(d=>d.is_submitted).length;document.getElementById('requiredCount').textContent=students.length*docTypes.filter(t=>t.is_required).length}
-function studentCard(s){const [label,cls]=stamp(s.id);return `<div class="card" id="card-${s.id}"><div class="head" onclick="toggleCard('${s.id}')"><span class="id">${esc(s.student_number)}</span><span class="name">${esc(s.full_name)}</span><span class="meta">${esc(s.year_graduated||'')}</span><span class="stamp ${cls}">${label}</span><span>›</span></div><div class="body">${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map(t=>docRow(s,t,true)).join('')}</div><div class="actions"><button class="small" onclick="editStudent('${s.id}')">Edit</button><button class="small danger" onclick="deleteStudent('${s.id}')">Delete</button></div></div></div>`}
-function detailHtml(s){return `<div class="grid"><div><div class="k">Student ID</div><div class="v">${esc(s.student_number)}</div></div><div><div class="k">Full name</div><div class="v">${esc(s.full_name)}</div></div><div><div class="k">Sex</div><div class="v">${esc(s.sex)}</div></div><div><div class="k">Date of birth</div><div class="v">${esc(s.date_of_birth)}</div></div><div><div class="k">Contact</div><div class="v">${esc(s.contact_number)}</div></div><div><div class="k">Email</div><div class="v">${esc(s.email)}</div></div><div><div class="k">Provincial address</div><div class="v">${esc(s.provincial_address)}</div></div><div><div class="k">City address</div><div class="v">${esc(s.city_address)}</div></div><div><div class="k">Year graduated</div><div class="v">${esc(s.year_graduated)}</div></div><div><div class="k">Year residency</div><div class="v">${esc(s.year_residency)}</div></div></div>`}
-function docRow(s,t,admin){const d=docs.find(x=>x.student_id===s.id&&x.document_type_id===t.id);const checked=!!d?.is_submitted;return `<div class="doc ${checked?'checked':''}"><span class="check" onclick="toggleDoc('${s.id}','${t.id}',${checked})">${checked?'✓':''}</span><span class="doclabel">${esc(t.name)}${t.is_required?' *':''}</span>${d?.file_url?`<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}">Open file</a>`:''}<input id="url-${s.id}-${t.id}" placeholder="Document URL" value="${esc(d?.file_url||'')}"><button class="btn small" onclick="saveDoc('${s.id}','${t.id}')">Save</button>${d?.file_url?`<button class="btn small danger" onclick="removeDoc('${s.id}','${t.id}')">Remove</button>`:''}</div>`}
-function toggleCard(id){document.getElementById('card-'+id)?.classList.toggle('open')}
-async function ensureDocs(studentId){for(const t of docTypes){await sb.from('student_documents').upsert({student_id:studentId,document_type_id:t.id,is_submitted:false},{onConflict:'student_id,document_type_id',ignoreDuplicates:true})}await refreshData()}
-async function toggleDoc(studentId,typeId,checked){const d=docs.find(x=>x.student_id===studentId&&x.document_type_id===typeId);const payload={student_id:studentId,document_type_id:typeId,is_submitted:!checked,submitted_at:!checked?new Date().toISOString():null};const {error}=await sb.from('student_documents').upsert(payload,{onConflict:'student_id,document_type_id'});if(error)alert(error.message);else await refreshData()}
-async function saveDoc(studentId,typeId){const url=document.getElementById(`url-${studentId}-${typeId}`).value.trim();const d=docs.find(x=>x.student_id===studentId&&x.document_type_id===typeId);const {error}=await sb.from('student_documents').upsert({student_id:studentId,document_type_id:typeId,is_submitted:d?.is_submitted||false,file_url:url||null},{onConflict:'student_id,document_type_id'});if(error)alert(error.message);else await refreshData()}
-async function removeDoc(studentId,typeId){const d=docs.find(x=>x.student_id===studentId&&x.document_type_id===typeId);if(!d)return;const {error}=await sb.from('student_documents').update({file_url:null}).eq('id',d.id);if(error)alert(error.message);else await refreshData()}
-function openStudentModal(s){editingId=s?.id||null;document.getElementById('modalTitle').textContent=editingId?'Edit student':'Add student';document.getElementById('fNumber').value=s?.student_number||'';document.getElementById('fNumber').disabled=!!editingId;document.getElementById('fName').value=s?.full_name||'';document.getElementById('fSex').value=s?.sex||'';document.getElementById('fDob').value=s?.date_of_birth||'';document.getElementById('fContact').value=s?.contact_number||'';document.getElementById('fEmail').value=s?.email||'';document.getElementById('fProv').value=s?.provincial_address||'';document.getElementById('fCity').value=s?.city_address||'';document.getElementById('fGrad').value=s?.year_graduated||'';document.getElementById('fResid').value=s?.year_residency||'';document.getElementById('fPassword').value='';document.getElementById('modalError').classList.add('hidden');document.getElementById('studentModal').classList.add('open')}
-function closeStudentModal(){document.getElementById('studentModal').classList.remove('open')}
-function editStudent(id){const s=students.find(x=>x.id===id);if(s)openStudentModal(s)}
-async function saveStudent(){const number=document.getElementById('fNumber').value.trim(),name=document.getElementById('fName').value.trim(),password=document.getElementById('fPassword').value;if(!number||!name){modalMsg('Student ID and full name are required.');return}if(password&&password.length<8){modalMsg('Student password must be at least 8 characters.');return}const payload={student_number:number,full_name:name,sex:document.getElementById('fSex').value||null,date_of_birth:document.getElementById('fDob').value||null,contact_number:document.getElementById('fContact').value.trim()||null,email:document.getElementById('fEmail').value.trim()||null,provincial_address:document.getElementById('fProv').value.trim()||null,city_address:document.getElementById('fCity').value.trim()||null,year_graduated:Number(document.getElementById('fGrad').value)||null,year_residency:Number(document.getElementById('fResid').value)||null};let studentId=editingId;if(editingId){const {error}=await sb.from('students').update(payload).eq('id',editingId);if(error){modalMsg(error.message);return}}else{const {data,error}=await sb.from('students').insert(payload).select().single();if(error){modalMsg(error.message);return}studentId=data.id}await refreshData();await ensureDocs(studentId);if(password){const {data:fn,error}=await sb.functions.invoke('create-student-account',{body:{student_id:studentId,student_number:number,password}});if(error||fn?.error){modalMsg(error?.message||fn?.error||'Could not create the student login account.');return}}closeStudentModal();await refreshData()}
-function modalMsg(t){const e=document.getElementById('modalError');e.textContent=t;e.classList.remove('hidden')}
-async function deleteStudent(id){const s=students.find(x=>x.id===id);if(!s||!confirm(`Delete ${s.full_name}? This also removes their document records.`))return;const {error}=await sb.from('students').delete().eq('id',id);if(error)alert(error.message);else await refreshData()}
-async function refreshData(){const a=await Promise.all([sb.from('students').select('*').order('student_number'),sb.from('student_documents').select('*')]);if(!a[0].error){students=a[0].data||[];docs=a[1].data||[];fillYears();renderStudents()}}
-async function loadStudent(){const {data:acct,error}=await sb.from('student_accounts').select('student_id').eq('user_id',currentUser.id).maybeSingle();if(error||!acct){document.getElementById('studentProfile').innerHTML='<div class="panel" style="padding:25px">Student account is not linked to a student record.</div>';return}const a=await Promise.all([sb.from('students').select('*').eq('id',acct.student_id).single(),sb.from('document_types').select('*').order('name'),sb.from('student_documents').select('*').eq('student_id',acct.student_id)]);if(a[0].error){document.getElementById('studentProfile').innerHTML='<div class="panel" style="padding:25px">Unable to load your record.</div>';return}students=[a[0].data];docTypes=a[1].data||[];docs=a[2].data||[];const s=students[0];document.getElementById('studentProfile').innerHTML=`<div class="card"><div class="body" style="display:block"><h2 style="font:500 25px Georgia,serif;margin:0 0 4px">${esc(s.full_name)}</h2><p class="meta" style="margin:0 0 20px">Student ID: ${esc(s.student_number)}</p>${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map(t=>studentDocView(s,t)).join('')}</div></div></div>`}
-function studentDocView(s,t){const d=docs.find(x=>x.document_type_id===t.id);return `<div class="doc ${d?.is_submitted?'checked':''}"><span class="check" style="cursor:default">${d?.is_submitted?'✓':''}</span><span class="doclabel">${esc(t.name)}${t.is_required?' *':''}</span>${d?.file_url?`<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}">View document</a>`:''}<span style="font-size:11px;color:#8b8578">${d?.is_submitted?'Submitted':'Not submitted'}</span></div>`}
-function subscribeRealtime(){if(channel)sb.removeChannel(channel);channel=sb.channel('nursync-live').on('postgres_changes',{event:'*',schema:'public',table:'students'},()=>loginMode==='admin'&&refreshData()).on('postgres_changes',{event:'*',schema:'public',table:'student_documents'},()=>loginMode==='admin'?refreshData():loadStudent()).subscribe()}
-async function signOut(){if(channel)sb.removeChannel(channel);channel=null;await sb.auth.signOut();currentUser=null;document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden');showLogin('admin')}
-sb.auth.getSession().then(({data})=>{if(data.session){currentUser=data.session.user;routeUser()}});
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NurSync</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      :root {
+        --paper: #f6f3ec;
+        --card: #fff;
+        --ink: #1b2a4a;
+        --soft: #4b5670;
+        --muted: #8b8578;
+        --line: #dcd6c8;
+        --green: #3f6b4e;
+        --deep: #2c4a37;
+        --greenbg: #e7efe8;
+        --red: #b23a34;
+        --redbg: #f6e4e1;
+        --amber: #a6621b;
+        --amberbg: #f5eada;
+        --gold: #c9a66b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--paper);
+        color: var(--ink);
+        font-family:
+          Inter,
+          system-ui,
+          -apple-system,
+          sans-serif;
+      }
+      .gate {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .gate-box {
+        width: min(440px, 100%);
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 10px 30px #1b2a4a12;
+      }
+      .mark {
+        width: 64px;
+        height: 64px;
+        border: 2px solid var(--green);
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto 18px;
+      }
+      .mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .gate h1 {
+        text-align: center;
+        font-family: Georgia, serif;
+        font-weight: 500;
+        margin: 0 0 6px;
+        font-size: 32px;
+      }
+      .sub {
+        text-align: center;
+        color: var(--soft);
+        font-size: 14px;
+        margin: 0 0 24px;
+      }
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .tabs button {
+        flex: 1;
+      }
+      .tab {
+        padding: 9px;
+        border: 1px solid var(--line);
+        background: #fff;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green);
+      }
+      label {
+        display: block;
+        font-size: 12px;
+        color: var(--soft);
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 10px 11px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--ink);
+        font: inherit;
+        margin-bottom: 14px;
+      }
+      button {
+        font: inherit;
+      }
+      .btn {
+        width: 100%;
+        padding: 10px 16px;
+        border: 1px solid var(--green);
+        border-radius: 8px;
+        background: var(--green);
+        color: #fff;
+        cursor: pointer;
+      }
+      .btn:hover {
+        background: var(--deep);
+      }
+      .error {
+        color: var(--red);
+        background: var(--redbg);
+        padding: 9px 11px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .topbar {
+        background: var(--deep);
+        color: #efeae0;
+        padding: 14px 28px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand img {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid var(--gold);
+        object-fit: cover;
+      }
+      .brand strong {
+        font-family: Georgia, serif;
+        font-weight: 500;
+      }
+      .role {
+        display: block;
+        color: var(--gold);
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .signout {
+        padding: 7px 13px;
+        border: 1px solid #ffffff44;
+        background: transparent;
+        color: #fff;
+        border-radius: 7px;
+        cursor: pointer;
+      }
+      .main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 26px 24px 70px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .stat,
+      .panel,
+      .card {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+      .stat {
+        padding: 15px;
+      }
+      .num {
+        font-family: Georgia, serif;
+        font-size: 25px;
+      }
+      .lbl {
+        font-size: 12px;
+        color: var(--soft);
+      }
+      .controls {
+        padding: 13px;
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+      }
+      .controls input,
+      .controls select {
+        margin: 0;
+      }
+      .controls input {
+        flex: 1;
+        min-width: 220px;
+      }
+      .controls select {
+        width: auto;
+      }
+      .add {
+        width: auto;
+        white-space: nowrap;
+      }
+      .card {
+        overflow: hidden;
+        margin-bottom: 10px;
+      }
+      .head {
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+      }
+      .id {
+        font-family: monospace;
+        font-size: 12px;
+        background: var(--greenbg);
+        color: var(--deep);
+        padding: 5px 8px;
+        border-radius: 6px;
+      }
+      .name {
+        font-family: Georgia, serif;
+        font-size: 17px;
+        flex: 1;
+      }
+      .meta {
+        font-size: 12px;
+        color: var(--soft);
+      }
+      .stamp {
+        font-family: monospace;
+        font-size: 11px;
+        padding: 5px 9px;
+        border-radius: 14px;
+      }
+      .complete {
+        background: var(--greenbg);
+        color: var(--deep);
+      }
+      .partial {
+        background: var(--amberbg);
+        color: var(--amber);
+      }
+      .empty {
+        background: var(--redbg);
+        color: var(--red);
+      }
+      .body {
+        display: none;
+        border-top: 1px solid var(--line);
+        padding: 18px;
+        background: #fcfaf5;
+      }
+      .card.open .body {
+        display: block;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .k {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+      .v {
+        font-size: 14px;
+        margin-top: 3px;
+      }
+      .docs h3 {
+        font:
+          500 15px Georgia,
+          serif;
+        margin: 0 0 10px;
+      }
+      .doc {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 11px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        margin-bottom: 7px;
+        flex-wrap: wrap;
+      }
+      .doc.checked {
+        border-color: var(--green);
+        background: var(--greenbg);
+      }
+      .check {
+        width: 19px;
+        height: 19px;
+        border: 1px solid var(--muted);
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .checked .check {
+        background: var(--green);
+        color: #fff;
+        border-color: var(--green);
+      }
+      .doclabel {
+        flex: 1;
+        min-width: 150px;
+        font-size: 13px;
+      }
+      .doc input {
+        width: 190px;
+        margin: 0;
+        padding: 6px 8px;
+        font-size: 12px;
+      }
+      .small {
+        width: auto;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      .link {
+        font-size: 12px;
+        color: var(--deep);
+        text-decoration: underline;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 15px;
+      }
+      .danger {
+        border-color: var(--red);
+        color: var(--red);
+        background: #fff;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        background: #1b2a4a66;
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 35px 16px;
+        overflow: auto;
+        z-index: 10;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .modal-box {
+        background: #fff;
+        border-radius: 14px;
+        padding: 24px;
+        width: min(650px, 100%);
+      }
+      .modal h2 {
+        font:
+          500 21px Georgia,
+          serif;
+        margin: 0 0 5px;
+      }
+      .modal p {
+        color: var(--soft);
+        font-size: 13px;
+      }
+      .formgrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .full {
+        grid-column: 1/-1;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .modal-actions button {
+        flex: 1;
+      }
+      .cancel {
+        background: #fff;
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      .notice {
+        padding: 11px;
+        background: var(--amberbg);
+        color: var(--amber);
+        border-radius: 8px;
+        font-size: 12px;
+        margin-bottom: 14px;
+      }
+      @media (max-width: 650px) {
+        .stats {
+          grid-template-columns: 1fr;
+        }
+        .formgrid {
+          grid-template-columns: 1fr;
+        }
+        .full {
+          grid-column: auto;
+        }
+        .topbar {
+          padding: 12px 16px;
+        }
+        .main {
+          padding: 18px 12px;
+        }
+        .meta {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="login" class="gate">
+      <div class="gate-box">
+        <div class="mark"><img src="logo.png" alt="NurSync" /></div>
+        <h1>NurSync</h1>
+        <p class="sub">Student Registry &amp; Document Management</p>
+        <div class="tabs">
+          <button id="adminTab" class="tab active" onclick="showLogin('admin')">
+            Registrar</button
+          ><button id="studentTab" class="tab" onclick="showLogin('student')">
+            Student
+          </button>
+        </div>
+        <div id="loginError" class="error hidden"></div>
+        <form id="loginForm">
+          <label id="loginIdLabel">Registrar email</label
+          ><input
+            id="loginId"
+            type="email"
+            autocomplete="username"
+            required
+          /><label>Password</label
+          ><input
+            id="loginPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+          /><button class="btn" type="submit">Sign in</button>
+        </form>
+      </div>
+    </div>
+    <div id="app" class="hidden">
+      <header class="topbar">
+        <div class="brand">
+          <img src="logo.png" alt="" />
+          <div>
+            <strong>NurSync</strong><span id="roleLabel" class="role"></span>
+          </div>
+        </div>
+        <div>
+          <span id="sync" style="font-size: 12px; margin-right: 12px"
+            >● Live</span
+          ><button class="signout" onclick="signOut()">Sign out</button>
+        </div>
+      </header>
+      <main class="main">
+        <div id="adminView" class="hidden">
+          <div class="stats">
+            <div class="stat">
+              <div id="studentCount" class="num">0</div>
+              <div class="lbl">Students</div>
+            </div>
+            <div class="stat">
+              <div id="submittedCount" class="num">0</div>
+              <div class="lbl">Documents submitted</div>
+            </div>
+            <div class="stat">
+              <div id="requiredCount" class="num">0</div>
+              <div class="lbl">Required documents</div>
+            </div>
+          </div>
+          <div class="controls">
+            <input
+              id="search"
+              placeholder="Search Student ID or name..."
+              oninput="renderStudents()"
+            /><select id="yearFilter" onchange="renderStudents()">
+              <option value="">All graduation years</option></select
+            ><button class="btn add" onclick="openStudentModal()">
+              + Add student
+            </button>
+          </div>
+          <div id="studentList"></div>
+        </div>
+        <div id="studentView" class="hidden">
+          <div id="studentProfile"></div>
+        </div>
+      </main>
+    </div>
+    <div id="studentModal" class="modal">
+      <div class="modal-box">
+        <h2 id="modalTitle">Add student</h2>
+        <p>Student information and optional login password.</p>
+        <div id="modalError" class="error hidden"></div>
+        <div class="formgrid">
+          <div><label>Student ID</label><input id="fNumber" /></div>
+          <div><label>Full name</label><input id="fName" /></div>
+          <div>
+            <label>Sex</label
+            ><select id="fSex">
+              <option value="">Select</option>
+              <option>Male</option>
+              <option>Female</option>
+            </select>
+          </div>
+          <div><label>Date of birth</label><input id="fDob" type="date" /></div>
+          <div><label>Contact number</label><input id="fContact" /></div>
+          <div><label>Email</label><input id="fEmail" type="email" /></div>
+          <div class="full">
+            <label>Provincial address</label><input id="fProv" />
+          </div>
+          <div class="full">
+            <label>City address</label><input id="fCity" />
+          </div>
+          <div>
+            <label>Year graduated</label><input id="fGrad" type="number" />
+          </div>
+          <div>
+            <label>Year residency</label><input id="fResid" type="number" />
+          </div>
+          <div class="full">
+            <label
+              >Student password
+              <span style="font-weight: 400; color: #8b8578"
+                >(optional; minimum 8 characters)</span
+              ></label
+            ><input
+              id="fPassword"
+              type="password"
+              autocomplete="new-password"
+            />
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button class="btn cancel" onclick="closeStudentModal()">
+            Cancel</button
+          ><button class="btn" onclick="saveStudent()">Save student</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      const SUPABASE_URL = "https://kivbqllahiisffihnrgh.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY =
+        "sb_publishable_62AnaZ2qZYE8_i8RYapiug_1mcF0_Nd";
+      const { createClient } = supabase;
+      const sb = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const DOCS = [
+        "Personal Record",
+        "Academic Record",
+        "Completion and Certification Records",
+        "RLE / Clinical Records",
+        "Others",
+      ];
+      let loginMode = "admin",
+        currentUser = null,
+        students = [],
+        docTypes = [],
+        docs = [],
+        editingId = null,
+        channel = null;
+      function esc(v) {
+        return String(v ?? "").replace(
+          /[&<>\"]/g,
+          (m) =>
+            ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '\\"': "&quot;" })[m] ||
+            m,
+        );
+      }
+      function showLogin(mode) {
+        loginMode = mode;
+        document
+          .getElementById("adminTab")
+          .classList.toggle("active", mode === "admin");
+        document
+          .getElementById("studentTab")
+          .classList.toggle("active", mode === "student");
+        const label = document.getElementById("loginIdLabel");
+        const input = document.getElementById("loginId");
+        label.textContent = mode === "admin" ? "Registrar email" : "Student ID";
+        input.type = mode === "admin" ? "email" : "text";
+        input.placeholder =
+          mode === "admin" ? "registrar@example.com" : "2024-001";
+        input.value = "";
+        document.getElementById("loginError").classList.add("hidden");
+      }
+      function syntheticEmail(number) {
+        return (
+          number.toLowerCase().replace(/[^a-z0-9._-]/g, "-") +
+          "@students.nursync.internal"
+        );
+      }
+      function msg(text) {
+        const e = document.getElementById("loginError");
+        e.textContent = text;
+        e.classList.remove("hidden");
+      }
+      async function login(e) {
+        e.preventDefault();
+        const id = document.getElementById("loginId").value.trim();
+        const pass = document.getElementById("loginPassword").value;
+        if (!id || !pass) return;
+        const email = loginMode === "student" ? syntheticEmail(id) : id;
+        const { data, error } = await sb.auth.signInWithPassword({
+          email,
+          password: pass,
+        });
+        if (error) {
+          msg(`Sign in failed: ${error.message}`);
+          return;
+        }
+        currentUser = data.user;
+        await routeUser();
+      }
+      document.getElementById("loginForm").addEventListener("submit", login);
+      async function routeUser() {
+        const { data, error } = await sb
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+        if (error || !data) {
+          await sb.auth.signOut();
+          msg(
+            "Your account is not assigned a NurSync role. Ask the registrar to configure it.",
+          );
+          return;
+        }
+        document.getElementById("login").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        document.getElementById("roleLabel").textContent =
+          data.role === "admin" ? "Registrar" : "Student";
+        if (data.role === "admin") {
+          document.getElementById("adminView").classList.remove("hidden");
+          document.getElementById("studentView").classList.add("hidden");
+          await loadAdmin();
+        } else {
+          document.getElementById("studentView").classList.remove("hidden");
+          document.getElementById("adminView").classList.add("hidden");
+          await loadStudent();
+        }
+        subscribeRealtime();
+      }
+      async function loadAdmin() {
+        const a = await Promise.all([
+          sb.from("students").select("*").order("student_number"),
+          sb.from("document_types").select("*").order("name"),
+          sb.from("student_documents").select("*"),
+        ]);
+        if (a[0].error) {
+          alert(a[0].error.message);
+          return;
+        }
+        students = a[0].data || [];
+        docTypes = a[1].data || [];
+        docs = a[2].data || [];
+        fillYears();
+        renderStudents();
+      }
+      function fillYears() {
+        const sel = document.getElementById("yearFilter");
+        const old = sel.value;
+        const years = [
+          ...new Set(students.map((s) => s.year_graduated).filter(Boolean)),
+        ].sort((a, b) => b - a);
+        sel.innerHTML =
+          '<option value="">All graduation years</option>' +
+          years.map((y) => `<option value="${y}">${y}</option>`).join("");
+        sel.value = old;
+      }
+      function docsFor(id) {
+        return docs.filter((d) => d.student_id === id);
+      }
+      function stamp(id) {
+        const d = docsFor(id),
+          required = docTypes.filter((t) => t.is_required),
+          done = d.filter((x) => x.is_submitted);
+        const n = done.length,
+          total = docTypes.length,
+          reqDone = required.filter((t) =>
+            d.some((x) => x.document_type_id === t.id && x.is_submitted),
+          ).length;
+        if (!total) return ["0 / 0", "empty"];
+        if (reqDone === required.length) return [`${n} / ${total}`, "complete"];
+        return [`${n} / ${total}`, "partial"];
+      }
+      function renderStudents() {
+        const q = document.getElementById("search").value.toLowerCase();
+        const y = document.getElementById("yearFilter").value;
+        const list = students.filter(
+          (s) =>
+            (!q ||
+              `${s.student_number} ${s.full_name}`.toLowerCase().includes(q)) &&
+            (!y || String(s.year_graduated) === y),
+        );
+        document.getElementById("studentList").innerHTML = list.length
+          ? list.map(studentCard).join("")
+          : '<div class="panel" style="padding:40px;text-align:center;color:#4b5670">No students found.</div>';
+        document.getElementById("studentCount").textContent = students.length;
+        document.getElementById("submittedCount").textContent = docs.filter(
+          (d) => d.is_submitted,
+        ).length;
+        document.getElementById("requiredCount").textContent =
+          students.length * docTypes.filter((t) => t.is_required).length;
+      }
+      function studentCard(s) {
+        const [label, cls] = stamp(s.id);
+        return `<div class="card" id="card-${s.id}"><div class="head" onclick="toggleCard('${s.id}')"><span class="id">${esc(s.student_number)}</span><span class="name">${esc(s.full_name)}</span><span class="meta">${esc(s.year_graduated || "")}</span><span class="stamp ${cls}">${label}</span><span>›</span></div><div class="body">${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map((t) => docRow(s, t, true)).join("")}</div><div class="actions"><button class="small" onclick="editStudent('${s.id}')">Edit</button><button class="small danger" onclick="deleteStudent('${s.id}')">Delete</button></div></div></div>`;
+      }
+      function detailHtml(s) {
+        return `<div class="grid"><div><div class="k">Student ID</div><div class="v">${esc(s.student_number)}</div></div><div><div class="k">Full name</div><div class="v">${esc(s.full_name)}</div></div><div><div class="k">Sex</div><div class="v">${esc(s.sex)}</div></div><div><div class="k">Date of birth</div><div class="v">${esc(s.date_of_birth)}</div></div><div><div class="k">Contact</div><div class="v">${esc(s.contact_number)}</div></div><div><div class="k">Email</div><div class="v">${esc(s.email)}</div></div><div><div class="k">Provincial address</div><div class="v">${esc(s.provincial_address)}</div></div><div><div class="k">City address</div><div class="v">${esc(s.city_address)}</div></div><div><div class="k">Year graduated</div><div class="v">${esc(s.year_graduated)}</div></div><div><div class="k">Year residency</div><div class="v">${esc(s.year_residency)}</div></div></div>`;
+      }
+      function docRow(s, t, admin) {
+        const d = docs.find(
+          (x) => x.student_id === s.id && x.document_type_id === t.id,
+        );
+        const checked = !!d?.is_submitted;
+        return `<div class="doc ${checked ? "checked" : ""}"><span class="check" onclick="toggleDoc('${s.id}','${t.id}',${checked})">${checked ? "✓" : ""}</span><span class="doclabel">${esc(t.name)}${t.is_required ? " *" : ""}</span>${d?.file_url ? `<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}">Open file</a>` : ""}<input id="url-${s.id}-${t.id}" placeholder="Document URL" value="${esc(d?.file_url || "")}"><button class="btn small" onclick="saveDoc('${s.id}','${t.id}')">Save</button>${d?.file_url ? `<button class="btn small danger" onclick="removeDoc('${s.id}','${t.id}')">Remove</button>` : ""}</div>`;
+      }
+      function toggleCard(id) {
+        document.getElementById("card-" + id)?.classList.toggle("open");
+      }
+      async function ensureDocs(studentId) {
+        for (const t of docTypes) {
+          await sb.from("student_documents").upsert(
+            {
+              student_id: studentId,
+              document_type_id: t.id,
+              is_submitted: false,
+            },
+            {
+              onConflict: "student_id,document_type_id",
+              ignoreDuplicates: true,
+            },
+          );
+        }
+        await refreshData();
+      }
+      async function toggleDoc(studentId, typeId, checked) {
+        const d = docs.find(
+          (x) => x.student_id === studentId && x.document_type_id === typeId,
+        );
+        const payload = {
+          student_id: studentId,
+          document_type_id: typeId,
+          is_submitted: !checked,
+          submitted_at: !checked ? new Date().toISOString() : null,
+        };
+        const { error } = await sb
+          .from("student_documents")
+          .upsert(payload, { onConflict: "student_id,document_type_id" });
+        if (error) alert(error.message);
+        else await refreshData();
+      }
+      async function saveDoc(studentId, typeId) {
+        const url = document
+          .getElementById(`url-${studentId}-${typeId}`)
+          .value.trim();
+        const d = docs.find(
+          (x) => x.student_id === studentId && x.document_type_id === typeId,
+        );
+        const { error } = await sb.from("student_documents").upsert(
+          {
+            student_id: studentId,
+            document_type_id: typeId,
+            is_submitted: d?.is_submitted || false,
+            file_url: url || null,
+          },
+          { onConflict: "student_id,document_type_id" },
+        );
+        if (error) alert(error.message);
+        else await refreshData();
+      }
+      async function removeDoc(studentId, typeId) {
+        const d = docs.find(
+          (x) => x.student_id === studentId && x.document_type_id === typeId,
+        );
+        if (!d) return;
+        const { error } = await sb
+          .from("student_documents")
+          .update({ file_url: null })
+          .eq("id", d.id);
+        if (error) alert(error.message);
+        else await refreshData();
+      }
+      function openStudentModal(s) {
+        editingId = s?.id || null;
+        document.getElementById("modalTitle").textContent = editingId
+          ? "Edit student"
+          : "Add student";
+        document.getElementById("fNumber").value = s?.student_number || "";
+        document.getElementById("fNumber").disabled = !!editingId;
+        document.getElementById("fName").value = s?.full_name || "";
+        document.getElementById("fSex").value = s?.sex || "";
+        document.getElementById("fDob").value = s?.date_of_birth || "";
+        document.getElementById("fContact").value = s?.contact_number || "";
+        document.getElementById("fEmail").value = s?.email || "";
+        document.getElementById("fProv").value = s?.provincial_address || "";
+        document.getElementById("fCity").value = s?.city_address || "";
+        document.getElementById("fGrad").value = s?.year_graduated || "";
+        document.getElementById("fResid").value = s?.year_residency || "";
+        document.getElementById("fPassword").value = "";
+        document.getElementById("modalError").classList.add("hidden");
+        document.getElementById("studentModal").classList.add("open");
+      }
+      function closeStudentModal() {
+        document.getElementById("studentModal").classList.remove("open");
+      }
+      function editStudent(id) {
+        const s = students.find((x) => x.id === id);
+        if (s) openStudentModal(s);
+      }
+      async function saveStudent() {
+        const number = document.getElementById("fNumber").value.trim(),
+          name = document.getElementById("fName").value.trim(),
+          password = document.getElementById("fPassword").value;
+        if (!number || !name) {
+          modalMsg("Student ID and full name are required.");
+          return;
+        }
+        if (password && password.length < 8) {
+          modalMsg("Student password must be at least 8 characters.");
+          return;
+        }
+        const payload = {
+          student_number: number,
+          full_name: name,
+          sex: document.getElementById("fSex").value || null,
+          date_of_birth: document.getElementById("fDob").value || null,
+          contact_number:
+            document.getElementById("fContact").value.trim() || null,
+          email: document.getElementById("fEmail").value.trim() || null,
+          provincial_address:
+            document.getElementById("fProv").value.trim() || null,
+          city_address: document.getElementById("fCity").value.trim() || null,
+          year_graduated:
+            Number(document.getElementById("fGrad").value) || null,
+          year_residency:
+            Number(document.getElementById("fResid").value) || null,
+        };
+        let studentId = editingId;
+        if (editingId) {
+          const { error } = await sb
+            .from("students")
+            .update(payload)
+            .eq("id", editingId);
+          if (error) {
+            modalMsg(error.message);
+            return;
+          }
+        } else {
+          const { data, error } = await sb
+            .from("students")
+            .insert(payload)
+            .select()
+            .single();
+          if (error) {
+            modalMsg(error.message);
+            return;
+          }
+          studentId = data.id;
+        }
+        await refreshData();
+        await ensureDocs(studentId);
+        if (password) {
+          const { data: fn, error } = await sb.functions.invoke(
+            "create-student-account",
+            {
+              body: { student_id: studentId, student_number: number, password },
+            },
+          );
+          if (error || fn?.error) {
+            modalMsg(
+              error?.message ||
+                fn?.error ||
+                "Could not create the student login account.",
+            );
+            return;
+          }
+        }
+        closeStudentModal();
+        await refreshData();
+      }
+      function modalMsg(t) {
+        const e = document.getElementById("modalError");
+        e.textContent = t;
+        e.classList.remove("hidden");
+      }
+      async function deleteStudent(id) {
+        const s = students.find((x) => x.id === id);
+        if (
+          !s ||
+          !confirm(
+            `Delete ${s.full_name}? This also removes their document records.`,
+          )
+        )
+          return;
+        const { error } = await sb.from("students").delete().eq("id", id);
+        if (error) alert(error.message);
+        else await refreshData();
+      }
+      async function refreshData() {
+        const a = await Promise.all([
+          sb.from("students").select("*").order("student_number"),
+          sb.from("student_documents").select("*"),
+        ]);
+        if (!a[0].error) {
+          students = a[0].data || [];
+          docs = a[1].data || [];
+          fillYears();
+          renderStudents();
+        }
+      }
+      async function loadStudent() {
+        const { data: acct, error } = await sb
+          .from("student_accounts")
+          .select("student_id")
+          .eq("user_id", currentUser.id)
+          .maybeSingle();
+        if (error || !acct) {
+          document.getElementById("studentProfile").innerHTML =
+            '<div class="panel" style="padding:25px">Student account is not linked to a student record.</div>';
+          return;
+        }
+        const a = await Promise.all([
+          sb.from("students").select("*").eq("id", acct.student_id).single(),
+          sb.from("document_types").select("*").order("name"),
+          sb
+            .from("student_documents")
+            .select("*")
+            .eq("student_id", acct.student_id),
+        ]);
+        if (a[0].error) {
+          document.getElementById("studentProfile").innerHTML =
+            '<div class="panel" style="padding:25px">Unable to load your record.</div>';
+          return;
+        }
+        students = [a[0].data];
+        docTypes = a[1].data || [];
+        docs = a[2].data || [];
+        const s = students[0];
+        document.getElementById("studentProfile").innerHTML =
+          `<div class="card"><div class="body" style="display:block"><h2 style="font:500 25px Georgia,serif;margin:0 0 4px">${esc(s.full_name)}</h2><p class="meta" style="margin:0 0 20px">Student ID: ${esc(s.student_number)}</p>${detailHtml(s)}<div class="docs"><h3>Document checklist</h3>${docTypes.map((t) => studentDocView(s, t)).join("")}</div></div></div>`;
+      }
+      function studentDocView(s, t) {
+        const d = docs.find((x) => x.document_type_id === t.id);
+        return `<div class="doc ${d?.is_submitted ? "checked" : ""}"><span class="check" style="cursor:default">${d?.is_submitted ? "✓" : ""}</span><span class="doclabel">${esc(t.name)}${t.is_required ? " *" : ""}</span>${d?.file_url ? `<a class="link" target="_blank" rel="noopener" href="${esc(d.file_url)}">View document</a>` : ""}<span style="font-size:11px;color:#8b8578">${d?.is_submitted ? "Submitted" : "Not submitted"}</span></div>`;
+      }
+      function subscribeRealtime() {
+        if (channel) sb.removeChannel(channel);
+        channel = sb
+          .channel("nursync-live")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "students" },
+            () => loginMode === "admin" && refreshData(),
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "student_documents" },
+            () => (loginMode === "admin" ? refreshData() : loadStudent()),
+          )
+          .subscribe();
+      }
+      async function signOut() {
+        if (channel) sb.removeChannel(channel);
+        channel = null;
+        await sb.auth.signOut();
+        currentUser = null;
+        document.getElementById("app").classList.add("hidden");
+        document.getElementById("login").classList.remove("hidden");
+        showLogin("admin");
+      }
+      sb.auth.getSession().then(({ data }) => {
+        if (data.session) {
+          currentUser = data.session.user;
+          routeUser();
+        }
+      });
+    </script>
+  </body>
 </html>

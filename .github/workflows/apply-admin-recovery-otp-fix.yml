@@ -21,26 +21,21 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path("index.html")
           text = path.read_text(encoding="utf-8")
 
-          old_send = '''const { error } = await sb.auth.signInWithOtp({
-            email,
-            options: { shouldCreateUser: false },
-          });'''
-          new_send = '''const { error } = await sb.auth.resetPasswordForEmail(email);'''
-
-          if old_send not in text:
+          pattern = r'const \{ error \} = await sb\.auth\.signInWithOtp\(\{\s*email,\s*options: \{ shouldCreateUser: false \},\s*\}\);'
+          replacement = 'const { error } = await sb.auth.resetPasswordForEmail(email);'
+          text, count = re.subn(pattern, replacement, text, count=1)
+          if count != 1:
               raise SystemExit("Expected signInWithOtp block was not found")
-          text = text.replace(old_send, new_send, 1)
 
-          old_verify = '''          type: "email",'''
-          new_verify = '''          type: "recovery",'''
-
-          if old_verify not in text:
-              raise SystemExit("Expected email OTP verification type was not found")
-          text = text.replace(old_verify, new_verify, 1)
+          pattern = r'type: "email",'
+          text, count = re.subn(pattern, 'type: "recovery",', text, count=1)
+          if count != 1:
+              raise SystemExit("Expected email verification type was not found")
 
           path.write_text(text, encoding="utf-8")
           PY

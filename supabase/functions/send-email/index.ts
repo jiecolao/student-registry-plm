@@ -36,12 +36,24 @@ Deno.serve(async (req) => {
       }
       email_data?: {
         token?: string
+        token_hash?: string
         email_action_type?: string
       }
     }
 
     const recipientEmail = data.user?.email
     const otp = data.email_data?.token
+    const emailActionType = data.email_data?.email_action_type || 'unknown'
+    const tokenLength = typeof otp === 'string' ? otp.length : 0
+    const hasTokenHash = typeof data.email_data?.token_hash === 'string' && data.email_data.token_hash.length > 0
+
+    // Safe diagnostics: never log the OTP, token hash, email address, or other secrets.
+    console.log('Auth email hook diagnostics:', JSON.stringify({
+      email_action_type: emailActionType,
+      has_token: Boolean(otp),
+      token_length: tokenLength,
+      has_token_hash: hasTokenHash,
+    }))
 
     if (!recipientEmail || !otp) {
       console.error('Invalid Send Email Hook payload')
@@ -51,7 +63,7 @@ Deno.serve(async (req) => {
       })
     }
 
-    console.log(`Sending ${data.email_data?.email_action_type || 'auth'} email to ${recipientEmail}`)
+    console.log(`Sending ${emailActionType} email`)
 
     const htmlContent = `
       <!DOCTYPE html>
